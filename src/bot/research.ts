@@ -62,19 +62,34 @@ export async function handleResearchUpload(tg: Telegram, db: D1Database, message
     const more = result.errors.length > 15 ? `\n…и ещё ${result.errors.length - 15}` : "";
     return void (await sendMessage(tg, chatId, `❌ В research-пакете ошибки, PDF не создан:\n${list}${more}`));
   }
-  const data = result.data;
+  const id = await queueResearch(tg, db, result.data, chatId, now, "⏳ Research-пакет принят, PDF будет готов через 1–2 минуты.");
+  await logAdminAction(db, message.from!.id, "research.upload", now.toISOString(), { id, slug: result.data.slug });
+}
+
+/** Stores a valid research package as DRAFT and queues the PDF render; the admin gets the budget summary. */
+export async function queueResearch(
+  tg: Telegram,
+  db: D1Database,
+  data: ExhibitionResearch,
+  chatId: number,
+  now: Date,
+  intro: string,
+  aiCostUsd = 0,
+): Promise<number> {
   const budget = calculateBudget(data);
   const at = now.toISOString();
   const row = await db
     .prepare(
-      `INSERT INTO research_items (kind, title, status, research_date, data, calc, slug, created_at, updated_at)
-       VALUES ('EXHIBITION', ?1, 'DRAFT', ?2, ?3, ?4, ?5, ?6, ?6) RETURNING id`,
+      `INSERT INTO research_items (kind, title, status, research_date, data, calc, slug, ai_cost_usd, created_at, updated_at)
+       VALUES ('EXHIBITION', ?1, 'DRAFT', ?2, ?3, ?4, ?5, ?6, ?7, ?7) RETURNING id`,
     )
-    .bind(data.title, data.research_date, JSON.stringify(data), JSON.stringify(budget), data.slug, at)
+    .bind(data.title, data.research_date, JSON.stringify(data), JSON.stringify(budget), data.slug, aiCostUsd, at)
     .first<{ id: number }>();
   await enqueueJob(db, RENDER_JOB, { researchId: row!.id, chatId }, at);
-  await logAdminAction(db, message.from!.id, "research.upload", at, { id: row!.id, slug: data.slug });
-  await sendMessage(tg, chatId, `⏳ Research-пакет принят, PDF будет готов через 1–2 минуты.\n\n${budgetSummary(data, budget)}`);
+  await sendMessage(tg, chatId, `${intro}
+
+${budgetSummary(data, budget)}`);
+  return row!.id;
 }
 
 /** Cron job: render the PDF, keep the original in R2 and send it to the admin for review. */

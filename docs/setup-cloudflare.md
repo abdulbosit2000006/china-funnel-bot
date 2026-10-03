@@ -93,3 +93,15 @@
 - В меню команд бота у вас будут `/start` и `/admin`, у клиентов — только `/start`.
 
 Если что-то не так: **Workers & Pages → china-funnel-bot → Logs** покажет ошибки (токены в логах скрыты). Напишите мне, что видите.
+
+## Шаг 10. AI-research (ключ OpenAI)
+
+Ключ вставляется только в Cloudflare, никогда в чат или в код.
+
+1. Создайте ключ: [platform.openai.com/api-keys](https://platform.openai.com/api-keys) → **Create new secret key** → имя `china-funnel-bot` → скопируйте ключ (он показывается один раз).
+2. Рекомендуется поставить лимит расходов: **Settings → Limits** (или **Billing → Usage limits**) в кабинете OpenAI.
+3. Cloudflare: **Workers & Pages → china-funnel-bot → Settings → Variables and Secrets → + Add**, тип **Secret**, имя `OPENAI_API_KEY`, значение — ваш ключ → **Deploy**.
+4. Проверка: напишите боту `/find`. Через несколько минут придёт список выставок.
+
+Модель задана в `wrangler.jsonc` (`OPENAI_MODEL`). Защита бюджета в боте: не больше 10 AI-запросов в день и один запрос одновременно; стоимость каждого запроса бот пишет в сообщении.
+Чтобы обновить меню команд (`/find`, `/research`), один раз запустите снова **Register Telegram webhook** (шаг 8).
