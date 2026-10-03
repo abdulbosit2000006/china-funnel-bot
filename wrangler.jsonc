@@ -11,8 +11,7 @@
     {
       "binding": "DB",
       "database_name": "china-funnel-bot-db",
-      // Filled in once the database exists in Cloudflare (docs/setup-cloudflare.md, step 3).
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "aa89ad6e-3b7a-4419-867f-8236b2cd765e",
       "migrations_dir": "migrations"
     }
   ],
