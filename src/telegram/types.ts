@@ -21,6 +21,15 @@ export interface TgMessage {
   text?: string;
   caption?: string;
   document?: TgDocument;
+  photo?: TgPhotoSize[];
+}
+
+export interface TgPhotoSize {
+  file_id: string;
+  file_unique_id: string;
+  width: number;
+  height: number;
+  file_size?: number;
 }
 
 export interface TgDocument {

@@ -1,10 +1,11 @@
+import { POST_CARD_JOB, postPreviewWithoutPhoto, runPostCardJob } from "./bot/posts";
 import { RENDER_JOB, runRenderJob } from "./bot/research";
 import { claimUpdate, deleteOldUpdates, putSetting } from "./db";
 import { claimJob, failJob, finishJob } from "./jobs";
 import { handleUpdate } from "./bot/update";
 import { parseAdminIds, type Env } from "./env";
 import { log } from "./log";
-import { createBrowserRenderer, type PdfRenderer } from "./pdf/render";
+import { createBrowserImageRenderer, createBrowserRenderer, type ImageRenderer, type PdfRenderer } from "./pdf/render";
 import { createTelegram, type Telegram } from "./telegram/api";
 import type { TgUpdate } from "./telegram/types";
 
@@ -14,12 +15,16 @@ const ALLOWED_UPDATES = ["message", "callback_query", "my_chat_member"];
 export interface AppDeps {
   telegram: (env: Env) => Telegram;
   renderPdf: (env: Env) => PdfRenderer;
+  renderImage: (env: Env) => ImageRenderer;
   now: () => Date;
+  /** Outbound HTTP for official posters; tests replace it. */
+  fetchUrl?: typeof fetch;
 }
 
 const defaultDeps: AppDeps = {
   telegram: (env) => createTelegram(env.TELEGRAM_BOT_TOKEN),
   renderPdf: (env) => createBrowserRenderer(env.BROWSER),
+  renderImage: (env) => createBrowserImageRenderer(env.BROWSER),
   now: () => new Date(),
 };
 
@@ -105,16 +110,21 @@ export function createApp(deps: AppDeps = defaultDeps) {
     const job = await claimJob(env.DB, now);
     if (!job) return;
     const tg = deps.telegram(env);
-    const payload = JSON.parse(job.payload) as { researchId: number; chatId: number };
+    const payload = JSON.parse(job.payload) as { researchId: number; contentId: number; chatId: number };
     try {
       if (job.kind === RENDER_JOB) {
         await runRenderJob({ tg, db: env.DB, files: env.FILES, renderPdf: deps.renderPdf(env), now }, payload);
+      } else if (job.kind === POST_CARD_JOB) {
+        await runPostCardJob({ tg, db: env.DB, files: env.FILES, renderImage: deps.renderImage(env), fetchUrl: deps.fetchUrl ?? fetch }, payload);
       }
       await finishJob(env.DB, job.id);
       log.info("job.done", { id: job.id, kind: job.kind, attempts: job.attempts });
     } catch (error) {
       log.error("job.failed", error, { id: job.id, kind: job.kind, attempts: job.attempts });
-      if (await failJob(env.DB, job, error, now)) {
+      const gaveUp = await failJob(env.DB, job, error, now);
+      if (gaveUp && job.kind === POST_CARD_JOB) {
+        await postPreviewWithoutPhoto(tg, env.DB, payload).catch((e) => log.error("post.fallback_failed", e));
+      } else if (gaveUp) {
         await tg
           .call("sendMessage", { chat_id: payload.chatId, text: `⚠️ Не удалось создать PDF после ${job.attempts} попыток. Ошибка записана в логи.` })
           .catch(() => undefined);

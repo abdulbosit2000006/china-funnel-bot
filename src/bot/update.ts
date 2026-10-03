@@ -4,7 +4,7 @@ import type { TgCallbackQuery, TgMessage, TgUpdate } from "../telegram/types";
 import { ADMIN_CALLBACK_PREFIX, handleAdminCallback, sendAdminMenu } from "./admin";
 import { CTA_CALLBACK_PREFIX, deliverLeadMagnet, handleCtaClick } from "./funnel";
 import { MAGNET_CALLBACK_PREFIX, handleAdminUpload, handleMagnetCallback } from "./magnets";
-import { POST_CALLBACK_PREFIX, handleChannelMembership, handlePostCallback, handlePostEditText } from "./posts";
+import { POST_CALLBACK_PREFIX, handleChannelMembership, handlePostCallback, handlePostEditText, handlePostPhoto } from "./posts";
 import { RESEARCH_CALLBACK_PREFIX, handleResearchCallback, handleResearchUpload, isResearchFile } from "./research";
 import { template } from "./templates";
 
@@ -78,6 +78,7 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
   await upsertUser(ctx.db, from, now, null);
   if (isAdmin && message.document && isResearchFile(message)) return handleResearchUpload(ctx.tg, ctx.db, message, ctx.now);
   if (isAdmin && message.document) return handleAdminUpload(ctx.tg, ctx.db, ctx.files, message, ctx.now);
+  if (isAdmin && message.photo?.length && (await handlePostPhoto(ctx.tg, ctx.db, ctx.files, from.id, message.chat.id, message.photo))) return;
   if (isAdmin && /^\/admin(?:@\w+)?\s*$/.test(text.trim())) return sendAdminMenu(ctx.tg, message.chat.id);
   if (isAdmin && text && !text.startsWith("/") && (await handlePostEditText(ctx.tg, ctx.db, from.id, message.chat.id, text))) return;
   await sendMessage(ctx.tg, message.chat.id, await template(ctx.db, "fallback"));

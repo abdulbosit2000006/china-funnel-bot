@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { createApp } from "../src/app";
-import type { PdfRenderer } from "../src/pdf/render";
+import type { ImageRenderer, PdfRenderer } from "../src/pdf/render";
 import type { Telegram } from "../src/telegram/api";
 import type { TgUpdate } from "../src/telegram/types";
 
@@ -21,7 +21,7 @@ export function fakeTelegram(files: Record<string, string> = {}): Telegram & { c
     async call<T>(method: string, params: Record<string, unknown>): Promise<T> {
       calls.push({ method, params });
       if (method === "getMe") return { username: "test_bot" } as T;
-      if (method === "sendMessage") return { message_id: 5000 + calls.length } as T;
+      if (method === "sendMessage" || method === "sendPhoto") return { message_id: 5000 + calls.length } as T;
       if (method === "getFile") {
         const id = String(params.file_id);
         return { file_path: files[`documents/${id}.json`] !== undefined ? `documents/${id}.json` : `documents/${id}.pdf` } as T;
@@ -36,7 +36,8 @@ export function fakeTelegram(files: Record<string, string> = {}): Telegram & { c
       const params: Record<string, unknown> = {};
       form.forEach((value, key) => (params[key] = typeof value === "string" ? value : `<file ${(value as File).name}>`));
       calls.push({ method, params });
-      return { message_id: 900 + uploads, document: { file_id: `generated-${++uploads}` } } as T;
+      const fileId = `generated-${++uploads}`;
+      return { message_id: 900 + uploads, document: { file_id: fileId }, photo: [{ file_id: `${fileId}-small` }, { file_id: fileId }] } as T;
     },
   };
 }
@@ -50,8 +51,23 @@ export function fakeRenderer() {
   return Object.assign(render, { rendered });
 }
 
-export function makeApp(tg = fakeTelegram(), now = new Date("2026-10-03T12:00:00Z"), renderPdf = fakeRenderer()) {
-  return { app: createApp({ telegram: () => tg, renderPdf: () => renderPdf, now: () => now }), tg, renderPdf };
+export function fakeImageRenderer() {
+  const rendered: { html: string; width: number; height: number }[] = [];
+  const render: ImageRenderer = async (html, width, height) => {
+    rendered.push({ html, width, height });
+    return new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+  };
+  return Object.assign(render, { rendered });
+}
+
+export function makeApp(
+  tg = fakeTelegram(),
+  now = new Date("2026-10-03T12:00:00Z"),
+  renderPdf = fakeRenderer(),
+  renderImage: ImageRenderer = fakeImageRenderer(),
+  fetchUrl: typeof fetch = async () => new Response("no network in tests", { status: 503 }),
+) {
+  return { app: createApp({ telegram: () => tg, renderPdf: () => renderPdf, renderImage: () => renderImage, now: () => now, fetchUrl }), tg, renderPdf };
 }
 
 let nextUpdateId = 1;
