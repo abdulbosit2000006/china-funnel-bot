@@ -1,7 +1,9 @@
 import { findActiveFunnel, recordAnalytics, recordFunnelEvent, setBlocked, touchLeadFunnel, upsertUser } from "../db";
 import { sendMessage, type Telegram } from "../telegram/api";
 import type { TgCallbackQuery, TgMessage, TgUpdate } from "../telegram/types";
+import type { AiClient } from "../ai/openai";
 import { ADMIN_CALLBACK_PREFIX, handleAdminCallback, sendAdminMenu } from "./admin";
+import { AI_CALLBACK_PREFIX, handleAiCallback, requestDiscovery, requestResearch } from "./ai";
 import { CTA_CALLBACK_PREFIX, deliverLeadMagnet, handleCtaClick } from "./funnel";
 import { MAGNET_CALLBACK_PREFIX, handleAdminUpload, handleMagnetCallback } from "./magnets";
 import { POST_CALLBACK_PREFIX, handleChannelMembership, handlePostCallback, handlePostEditText, handlePostPhoto } from "./posts";
@@ -12,6 +14,7 @@ export interface BotContext {
   db: D1Database;
   files: R2Bucket;
   tg: Telegram;
+  ai: AiClient | null;
   admins: Set<number>;
   now: Date;
 }
@@ -80,6 +83,13 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
   if (isAdmin && message.document) return handleAdminUpload(ctx.tg, ctx.db, ctx.files, message, ctx.now);
   if (isAdmin && message.photo?.length && (await handlePostPhoto(ctx.tg, ctx.db, ctx.files, from.id, message.chat.id, message.photo))) return;
   if (isAdmin && /^\/admin(?:@\w+)?\s*$/.test(text.trim())) return sendAdminMenu(ctx.tg, message.chat.id);
+  const find = /^\/find(?:@\w+)?(?:\s+([\s\S]+))?$/.exec(text.trim());
+  if (isAdmin && find) return requestDiscovery(ctx.tg, ctx.db, ctx.ai, message.chat.id, from.id, find[1]?.trim().slice(0, 200) || null, ctx.now);
+  const research = /^\/research(?:@\w+)?(?:\s+([\s\S]+))?$/.exec(text.trim());
+  if (isAdmin && research) {
+    if (!research[1]?.trim()) return void (await sendMessage(ctx.tg, message.chat.id, "Напишите выставку после команды, например: <code>/research CIIF Shanghai 2027</code>"));
+    return requestResearch(ctx.tg, ctx.db, ctx.ai, message.chat.id, from.id, research[1].trim().slice(0, 200), ctx.now);
+  }
   if (isAdmin && text && !text.startsWith("/") && (await handlePostEditText(ctx.tg, ctx.db, from.id, message.chat.id, text))) return;
   await sendMessage(ctx.tg, message.chat.id, await template(ctx.db, "fallback"));
 }
@@ -87,7 +97,7 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
 async function handleCallback(callback: TgCallbackQuery, ctx: BotContext): Promise<void> {
   const data = callback.data ?? "";
   const message = callback.message;
-  const isAdminAction = [ADMIN_CALLBACK_PREFIX, MAGNET_CALLBACK_PREFIX, RESEARCH_CALLBACK_PREFIX, POST_CALLBACK_PREFIX].some((p) => data.startsWith(p));
+  const isAdminAction = [ADMIN_CALLBACK_PREFIX, MAGNET_CALLBACK_PREFIX, RESEARCH_CALLBACK_PREFIX, POST_CALLBACK_PREFIX, AI_CALLBACK_PREFIX].some((p) => data.startsWith(p));
   if (isAdminAction) {
     // Hidden buttons are not a security boundary: every admin action is re-checked here.
     if (!ctx.admins.has(callback.from.id) || !message) {
@@ -104,6 +114,7 @@ async function handleCallback(callback: TgCallbackQuery, ctx: BotContext): Promi
     if (data.startsWith(MAGNET_CALLBACK_PREFIX)) return handleMagnetCallback(ctx.tg, ctx.db, target, ctx.now);
     if (data.startsWith(RESEARCH_CALLBACK_PREFIX)) return handleResearchCallback(ctx.tg, ctx.db, target, ctx.now);
     if (data.startsWith(POST_CALLBACK_PREFIX)) return handlePostCallback(ctx.tg, ctx.db, target, ctx.now);
+    if (data.startsWith(AI_CALLBACK_PREFIX)) return handleAiCallback(ctx.tg, ctx.db, ctx.ai, target, ctx.now);
     return handleAdminCallback(ctx.tg, ctx.db, target, ctx.now);
   }
   if (data.startsWith(CTA_CALLBACK_PREFIX)) {

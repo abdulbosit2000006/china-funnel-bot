@@ -8,6 +8,8 @@ export interface Env {
   TELEGRAM_WEBHOOK_SECRET: string;
   ADMIN_API_TOKEN: string;
   ADMIN_TG_IDS: string; // comma-separated Telegram user ids
+  OPENAI_API_KEY?: string; // optional: enables AI research
+  OPENAI_MODEL?: string; // var, defaults to DEFAULT_AI_MODEL
 }
 
 export function parseAdminIds(raw: string | undefined): Set<number> {

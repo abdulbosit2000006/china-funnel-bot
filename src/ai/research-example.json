@@ -1,0 +1,361 @@
+{
+ "slug": "canton-fair-2027-spring",
+ "title": "Canton Fair 2027: biznes safar hisob-kitobi",
+ "research_date": "2026-10-03",
+ "currency": "USD",
+ "exhibition": {
+  "name": "Canton Fair",
+  "full_name": "China Import and Export Fair (Canton Fair) — 141-sessiya",
+  "official_site": "https://www.cantonfair.org.cn",
+  "organizer": "China Foreign Trade Centre",
+  "venue": "China Import and Export Fair Complex, Guangzhou",
+  "city": "Guangzhou",
+  "dates": {
+   "value": "15 aprel – 5 may 2027",
+   "label": "ESTIMATED",
+   "source": 1
+  },
+  "phases": [
+   {
+    "name": "1-bosqich",
+    "dates": "15–19 aprel",
+    "categories": "Sanoat uskunalari, elektronika, mashinasozlik, qurilish materiallari, energetika"
+   },
+   {
+    "name": "2-bosqich",
+    "dates": "23–27 aprel",
+    "categories": "Uy-ro'zg'or buyumlari, sovg'alar, mebel, dekor"
+   },
+   {
+    "name": "3-bosqich",
+    "dates": "1–5 may",
+    "categories": "To'qimachilik, kiyim, poyabzal, oziq-ovqat, sog'liq"
+   }
+  ],
+  "focus_phase": "1-bosqich",
+  "relevance": [
+   "Bir joyda minglab Xitoy zavodlari: stanoklar, ishlab chiqarish liniyalari, qadoqlash uskunalari.",
+   "Narxlarni bir kunda 10–20 ta yetkazib beruvchi bilan solishtirish mumkin.",
+   "Zavod vakillari bilan yuzma-yuz gaplashib, namunalarni ko'rish va shartlarni kelishish.",
+   "Ko'rgazmadan keyin Foshan, Dongguan, Shenzhen zavodlariga borish qulay."
+  ],
+  "visitor_info": {
+   "value": "Xorijiy xaridorlar uchun onlayn oldindan ro'yxatdan o'tish; bejik pasport bilan beriladi.",
+   "label": "ESTIMATED",
+   "source": 1
+  },
+  "registration": {
+   "value": "Rasmiy sayt orqali Buyer Registration; birinchi marta qatnashuvchilar uchun bejik bepul bo'lishi mumkin.",
+   "label": "UNKNOWN",
+   "source": 1
+  },
+  "edition": "2027",
+  "tagline": "Xitoydagi eng yirik xalqaro savdo ko'rgazmasi",
+  "stats": {
+   "year": "2025",
+   "source": 1,
+   "items": [
+    {
+     "label": "ko'rgazma maydoni",
+     "value": "1 550 000 m²"
+    },
+    {
+     "label": "eksponent kompaniya",
+     "value": "31 000+"
+    },
+    {
+     "label": "xorijiy xaridor",
+     "value": "250 000+"
+    },
+    {
+     "label": "davlatdan tashrifchilar",
+     "value": "210+"
+    }
+   ]
+  },
+  "deadline": {
+   "value": "Onlayn ro'yxatdan o'tish ko'rgazmadan oldin ochiladi",
+   "label": "UNKNOWN",
+   "source": 1
+  },
+  "poster_url": "https://www.example-organizer.cn/images/2027-poster.jpg"
+ },
+ "scenario": {
+  "people": 2,
+  "route": "Toshkent (TAS) → Guangzhou (CAN) → Toshkent",
+  "trip_dates": "14–20 aprel 2027",
+  "nights": 6,
+  "days": 7,
+  "hotel_category": "4★, ko'rgazma majmuasidan 1–2 metro bekati masofada",
+  "rooms": 2,
+  "hotel_short": "4★, 2 xona, 6 kecha"
+ },
+ "inputs": [
+  {
+   "key": "flight",
+   "title": "Aviachipta (borish-qaytish)",
+   "unit_price": 650,
+   "unit": "kishi",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ]
+   ],
+   "label": "ESTIMATED",
+   "source": 2,
+   "note": "Ekonom, 1 ta ulanish bilan"
+  },
+  {
+   "key": "hotel",
+   "title": "Mehmonxona",
+   "unit_price": 85,
+   "unit": "xona/kecha",
+   "factors": [
+    [
+     "rooms",
+     "xona"
+    ],
+    [
+     "nights",
+     "kecha"
+    ]
+   ],
+   "label": "ESTIMATED",
+   "source": 3,
+   "note": "Ko'rgazma kunlari narx odatdagidan yuqori"
+  },
+  {
+   "key": "food",
+   "title": "Ovqatlanish",
+   "unit_price": 35,
+   "unit": "kishi/kun",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ],
+    [
+     "days",
+     "kun"
+    ]
+   ],
+   "label": "ASSUMPTION",
+   "source": null,
+   "note": "Kuniga 3 mahal, o'rtacha restoran"
+  },
+  {
+   "key": "local",
+   "title": "Shahar ichida transport",
+   "unit_price": 12,
+   "unit": "kishi/kun",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ],
+    [
+     "days",
+     "kun"
+    ]
+   ],
+   "label": "ASSUMPTION",
+   "source": null,
+   "note": "Metro + DiDi taksi"
+  },
+  {
+   "key": "intercity",
+   "title": "Shaharlararo transport (Foshan zavodiga safar)",
+   "unit_price": 8,
+   "unit": "kishi/yo'l",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ],
+    [
+     2,
+     "yo'l"
+    ]
+   ],
+   "label": "ESTIMATED",
+   "source": 4,
+   "note": "Tezyurar poyezd / metro, ixtiyoriy"
+  },
+  {
+   "key": "visa",
+   "title": "Viza bilan bog'liq xarajatlar",
+   "unit_price": null,
+   "unit": "kishi",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ]
+   ],
+   "label": "UNKNOWN",
+   "source": null,
+   "note": "Joriy viza rejimi research paytida tekshiriladi"
+  },
+  {
+   "key": "registration",
+   "title": "Ko'rgazmada ro'yxatdan o'tish",
+   "unit_price": 0,
+   "unit": "kishi",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ]
+   ],
+   "label": "ESTIMATED",
+   "source": 1,
+   "note": "Oldindan onlayn ro'yxatdan o'tganda"
+  },
+  {
+   "key": "esim",
+   "title": "SIM / eSIM (internet)",
+   "unit_price": 15,
+   "unit": "kishi",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ]
+   ],
+   "label": "ESTIMATED",
+   "source": 5,
+   "note": "10 GB, 7–10 kun"
+  },
+  {
+   "key": "insurance",
+   "title": "Sayohat sug'urtasi",
+   "unit_price": 12,
+   "unit": "kishi",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ]
+   ],
+   "label": "ESTIMATED",
+   "source": null,
+   "note": ""
+  },
+  {
+   "key": "other",
+   "title": "Boshqa kutilgan xarajatlar",
+   "unit_price": 50,
+   "unit": "kishi",
+   "factors": [
+    [
+     "people",
+     "kishi"
+    ]
+   ],
+   "label": "ASSUMPTION",
+   "source": null,
+   "note": "Tarjimon ilovasi, namunalarni olib kelish, mayda xarajatlar"
+  }
+ ],
+ "reserve_pct": 10,
+ "program": [
+  {
+   "day": "1-kun",
+   "text": "Toshkentdan uchish, Guangzhou'ga kelish, mehmonxonaga joylashish, eSIM va to'lov ilovalarini sozlash."
+  },
+  {
+   "day": "2-kun",
+   "text": "Ko'rgazma, 1-kun: bejik olish, asosiy pavilonlar, maqsadli kategoriyalarni ko'rish."
+  },
+  {
+   "day": "3-kun",
+   "text": "Ko'rgazma, 2-kun: tanlangan stendlarda muzokaralar, narx so'rovlari, kontaktlar."
+  },
+  {
+   "day": "4-kun",
+   "text": "Ko'rgazma, 3-kun: qo'shimcha stendlar, namunalar, takroriy uchrashuvlar."
+  },
+  {
+   "day": "5-kun",
+   "text": "Foshan yoki Dongguan'dagi zavodga tashrif (oldindan kelishilgan holda)."
+  },
+  {
+   "day": "6-kun",
+   "text": "Natijalarni tahlil qilish, zavodlar bilan yakuniy savollar, bo'sh vaqt."
+  },
+  {
+   "day": "7-kun",
+   "text": "Toshkentga qaytish."
+  }
+ ],
+ "checklist": [
+  "Pasport amal qilish muddati — kamida 6 oy.",
+  "Viza talablarini rasmiy manbadan tekshirish.",
+  "Ko'rgazma saytida oldindan Buyer Registration.",
+  "Aviachipta va mehmonxonani 1–2 oy oldin bron qilish (ko'rgazma kunlari narx oshadi).",
+  "Alipay yoki WeChat Pay'ni xorijiy karta bilan ulash.",
+  "Qidirilayotgan uskuna ro'yxati: quvvat, o'lcham, mahsuldorlik, byudjet.",
+  "Vizitkalar (ingliz/xitoy tilida) va kompaniya taqdimoti.",
+  "Tarjimon ilovasi va oflayn xarita."
+ ],
+ "practical": [
+  {
+   "title": "To'lov",
+   "text": "Xitoyda deyarli hamma joyda Alipay / WeChat Pay. Naqd yuan ham olib yuring."
+  },
+  {
+   "title": "Internet",
+   "text": "Ko'plab xorijiy ilovalar ishlamaydi; eSIM roaming orqali odatda ishlaydi."
+  },
+  {
+   "title": "Til",
+   "text": "Stendlarda ingliz tilida gaplashadiganlar bor, lekin tarjimon ilovasi zarur."
+  },
+  {
+   "title": "Transport",
+   "text": "Metro ko'rgazma majmuasigacha boradi; DiDi taksi ilovasi qulay."
+  },
+  {
+   "title": "Ob-havo",
+   "text": "Aprel oyida issiq va nam, yomg'ir bo'lishi mumkin."
+  }
+ ],
+ "sources": [
+  {
+   "id": 1,
+   "title": "Canton Fair rasmiy sayti",
+   "url": "https://www.cantonfair.org.cn",
+   "type": "OFFICIAL",
+   "retrieved_at": "2026-10-03"
+  },
+  {
+   "id": 2,
+   "title": "Aviachipta narxlari (agregator)",
+   "url": "https://www.aviasales.uz",
+   "type": "MARKETPLACE",
+   "retrieved_at": "2026-10-03"
+  },
+  {
+   "id": 3,
+   "title": "Mehmonxona narxlari (bron qilish sayti)",
+   "url": "https://www.booking.com",
+   "type": "MARKETPLACE",
+   "retrieved_at": "2026-10-03"
+  },
+  {
+   "id": 4,
+   "title": "China Railway 12306",
+   "url": "https://www.12306.cn",
+   "type": "OFFICIAL",
+   "retrieved_at": "2026-10-03"
+  },
+  {
+   "id": 5,
+   "title": "eSIM provayderi narxi",
+   "url": "https://www.airalo.com",
+   "type": "MARKETPLACE",
+   "retrieved_at": "2026-10-03"
+  }
+ ]
+}

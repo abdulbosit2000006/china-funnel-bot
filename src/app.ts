@@ -1,4 +1,6 @@
+import { runAiTick } from "./bot/ai";
 import { POST_CARD_JOB, postPreviewWithoutPhoto, runPostCardJob } from "./bot/posts";
+import { createOpenAI, type AiClient } from "./ai/openai";
 import { RENDER_JOB, runRenderJob } from "./bot/research";
 import { claimUpdate, deleteOldUpdates, putSetting } from "./db";
 import { claimJob, failJob, finishJob } from "./jobs";
@@ -19,7 +21,13 @@ export interface AppDeps {
   now: () => Date;
   /** Outbound HTTP for official posters; tests replace it. */
   fetchUrl?: typeof fetch;
+  /** AI provider; null when no key is configured. */
+  ai?: (env: Env) => AiClient | null;
 }
+
+export const DEFAULT_AI_MODEL = "gpt-6.1-sol";
+const defaultAi = (env: Env): AiClient | null =>
+  env.OPENAI_API_KEY ? createOpenAI(env.OPENAI_API_KEY, env.OPENAI_MODEL || DEFAULT_AI_MODEL) : null;
 
 const defaultDeps: AppDeps = {
   telegram: (env) => createTelegram(env.TELEGRAM_BOT_TOKEN),
@@ -67,6 +75,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
         db: env.DB,
         files: env.FILES,
         tg: deps.telegram(env),
+        ai: (deps.ai ?? defaultAi)(env),
         admins: parseAdminIds(env.ADMIN_TG_IDS),
         now,
       });
@@ -96,6 +105,8 @@ export function createApp(deps: AppDeps = defaultDeps) {
         commands: [
           { command: "start", description: "Старт" },
           { command: "admin", description: "Админ-панель" },
+          { command: "find", description: "AI: найти выставки (можно с темой)" },
+          { command: "research", description: "AI: research по выставке" },
         ],
       });
     }
@@ -147,6 +158,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
     async scheduled(controller: { scheduledTime: number }, env: Env): Promise<void> {
       const now = new Date(controller.scheduledTime);
       // Phase 3 adds follow-up delivery here (every minute).
+      await runAiTick({ tg: deps.telegram(env), db: env.DB, ai: (deps.ai ?? defaultAi)(env) }, now).catch((e) => log.error("ai.tick_failed", e));
       await runJobs(env, now);
       if (now.getUTCMinutes() === 0) {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();

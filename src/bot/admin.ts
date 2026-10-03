@@ -39,6 +39,18 @@ async function renderSection(db: D1Database, key: string, now: Date): Promise<{ 
   const section = SECTIONS.find((s) => s.key === key);
   if (!section) return { text: adminTexts.menuTitle, keyboard: adminMenuKeyboard() };
   if (key === "magnets") return renderMagnetList(db);
+  if (key === "research") {
+    const text =
+      `<b>🔎 Research</b>\n\n` +
+      `AI сам ищет выставки и собирает research с источниками; бюджет считает код, PDF и пост приходят вам на одобрение.\n\n` +
+      `• <b>🔎 Найти выставки</b> или <code>/find металл</code>: список подходящих выставок, по любой можно запустить research.\n` +
+      `• <code>/research CIIF Shanghai 2027</code>: research сразу по названию.\n` +
+      `• Можно прислать готовый research-пакет файлом .json.`;
+    return {
+      text,
+      keyboard: [[{ text: "🔎 Найти выставки", callback_data: "ai:d" }], ...backKeyboard],
+    };
+  }
   if (key === "dashboard") {
     const since = new Date(now.getTime() - 24 * 3600 * 1000).toISOString();
     const stats = await dashboardStats(db, since);
