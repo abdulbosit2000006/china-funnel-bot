@@ -18,6 +18,16 @@ export interface TgMessage {
   chat: TgChat;
   date: number;
   text?: string;
+  caption?: string;
+  document?: TgDocument;
+}
+
+export interface TgDocument {
+  file_id: string;
+  file_unique_id: string;
+  file_name?: string;
+  mime_type?: string;
+  file_size?: number;
 }
 
 export interface TgCallbackQuery {

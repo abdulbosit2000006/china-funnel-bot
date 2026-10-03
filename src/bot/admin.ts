@@ -1,6 +1,7 @@
 import { dashboardStats, logAdminAction } from "../db";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard } from "../telegram/types";
+import { renderMagnetList } from "./magnets";
 import { adminTexts } from "./texts";
 
 export const ADMIN_CALLBACK_PREFIX = "adm:";
@@ -37,6 +38,7 @@ async function renderSection(db: D1Database, key: string, now: Date): Promise<{ 
   if (key === "menu") return { text: adminTexts.menuTitle, keyboard: adminMenuKeyboard() };
   const section = SECTIONS.find((s) => s.key === key);
   if (!section) return { text: adminTexts.menuTitle, keyboard: adminMenuKeyboard() };
+  if (key === "magnets") return renderMagnetList(db);
   if (key === "dashboard") {
     const since = new Date(now.getTime() - 24 * 3600 * 1000).toISOString();
     const stats = await dashboardStats(db, since);
@@ -47,7 +49,9 @@ async function renderSection(db: D1Database, key: string, now: Date): Promise<{ 
       `<b>📊 Dashboard</b>\n\n` +
       `Пользователей всего: <b>${stats.usersTotal}</b>\n` +
       `Новых за 24 ч: <b>${stats.usersNew24h}</b>\n` +
-      `Входов в бота (/start) за 24 ч: <b>${stats.starts24h}</b>\n\n` +
+      `Входов в бота (/start) за 24 ч: <b>${stats.starts24h}</b>\n` +
+      `Выдано PDF за 24 ч: <b>${stats.pdfs24h}</b>\n` +
+      `«Хочу обсудить» за 24 ч: <b>${stats.cta24h}</b>\n\n` +
       `<b>Стадии лидов</b>\n${stages || "пока пусто"}`;
     return { text, keyboard: backKeyboard };
   }
@@ -68,6 +72,7 @@ export async function handleAdminCallback(
     message_id: callback.messageId,
     text,
     parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
     reply_markup: { inline_keyboard: keyboard },
   });
   await logAdminAction(db, callback.fromId, "open_section", now.toISOString(), { section: key });

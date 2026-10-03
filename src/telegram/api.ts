@@ -13,6 +13,8 @@ export class TelegramError extends Error {
 /** Minimal Bot API client. Handlers depend on this interface so tests can record calls. */
 export interface Telegram {
   call<T = unknown>(method: string, params: Record<string, unknown>): Promise<T>;
+  /** Downloads a file by the file_path returned from getFile (Bot API limit: 20 MB). */
+  downloadFile(filePath: string): Promise<ArrayBuffer>;
 }
 
 export function createTelegram(token: string, fetchImpl: typeof fetch = fetch): Telegram {
@@ -28,6 +30,11 @@ export function createTelegram(token: string, fetchImpl: typeof fetch = fetch): 
         throw new TelegramError(method, body.error_code ?? response.status, body.description ?? "unknown");
       }
       return body.result as T;
+    },
+    async downloadFile(filePath: string): Promise<ArrayBuffer> {
+      const response = await fetchImpl(`https://api.telegram.org/file/bot${token}/${filePath}`);
+      if (!response.ok) throw new TelegramError("downloadFile", response.status, response.statusText);
+      return response.arrayBuffer();
     },
   };
 }

@@ -1,18 +1,14 @@
-import {
-  findActiveFunnel,
-  recordAnalytics,
-  recordFunnelEvent,
-  setBlocked,
-  touchLeadFunnel,
-  upsertUser,
-} from "../db";
+import { findActiveFunnel, recordAnalytics, recordFunnelEvent, setBlocked, touchLeadFunnel, upsertUser } from "../db";
 import { sendMessage, type Telegram } from "../telegram/api";
 import type { TgCallbackQuery, TgMessage, TgUpdate } from "../telegram/types";
 import { ADMIN_CALLBACK_PREFIX, handleAdminCallback, sendAdminMenu } from "./admin";
-import { clientTexts } from "./texts";
+import { CTA_CALLBACK_PREFIX, deliverLeadMagnet, handleCtaClick } from "./funnel";
+import { MAGNET_CALLBACK_PREFIX, handleAdminUpload, handleMagnetCallback } from "./magnets";
+import { template } from "./templates";
 
 export interface BotContext {
   db: D1Database;
+  files: R2Bucket;
   tg: Telegram;
   admins: Set<number>;
   now: Date;
@@ -66,34 +62,43 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
       },
       now,
     );
-    if (isAdmin) return sendAdminMenu(ctx.tg, message.chat.id);
-    // Phase 2: a known campaign delivers its lead magnet PDF here.
-    const reply = start.payload && !funnel ? clientTexts.unknownCampaign : clientTexts.welcome;
-    await sendMessage(ctx.tg, message.chat.id, reply);
+    // The admin without a campaign gets the panel; with a campaign link they see exactly what a client sees.
+    if (isAdmin && !start.payload) return sendAdminMenu(ctx.tg, message.chat.id);
+    if (funnel && (await deliverLeadMagnet(ctx, message.chat.id, user, funnel))) return;
+    const reply = start.payload ? "unknownCampaign" : "welcome";
+    await sendMessage(ctx.tg, message.chat.id, await template(ctx.db, reply));
     return;
   }
 
   await upsertUser(ctx.db, from, now, null);
+  if (isAdmin && message.document) return handleAdminUpload(ctx.tg, ctx.db, ctx.files, message, ctx.now);
   if (isAdmin && /^\/admin(?:@\w+)?\s*$/.test(text.trim())) return sendAdminMenu(ctx.tg, message.chat.id);
-  await sendMessage(ctx.tg, message.chat.id, clientTexts.fallback);
+  await sendMessage(ctx.tg, message.chat.id, await template(ctx.db, "fallback"));
 }
 
 async function handleCallback(callback: TgCallbackQuery, ctx: BotContext): Promise<void> {
   const data = callback.data ?? "";
   const message = callback.message;
-  if (data.startsWith(ADMIN_CALLBACK_PREFIX)) {
+  const isAdminAction = data.startsWith(ADMIN_CALLBACK_PREFIX) || data.startsWith(MAGNET_CALLBACK_PREFIX);
+  if (isAdminAction) {
     // Hidden buttons are not a security boundary: every admin action is re-checked here.
     if (!ctx.admins.has(callback.from.id) || !message) {
       await ctx.tg.call("answerCallbackQuery", { callback_query_id: callback.id });
       return;
     }
-    await handleAdminCallback(
-      ctx.tg,
-      ctx.db,
-      { id: callback.id, fromId: callback.from.id, chatId: message.chat.id, messageId: message.message_id, data },
-      ctx.now,
-    );
-    return;
+    const target = {
+      id: callback.id,
+      fromId: callback.from.id,
+      chatId: message.chat.id,
+      messageId: message.message_id,
+      data,
+    };
+    if (data.startsWith(MAGNET_CALLBACK_PREFIX)) return handleMagnetCallback(ctx.tg, ctx.db, target, ctx.now);
+    return handleAdminCallback(ctx.tg, ctx.db, target, ctx.now);
+  }
+  if (data.startsWith(CTA_CALLBACK_PREFIX)) {
+    const { user } = await upsertUser(ctx.db, callback.from, ctx.now.toISOString(), null);
+    return handleCtaClick(ctx, callback, user);
   }
   await ctx.tg.call("answerCallbackQuery", { callback_query_id: callback.id });
 }
