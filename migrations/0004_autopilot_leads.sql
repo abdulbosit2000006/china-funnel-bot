@@ -4,3 +4,4 @@ ALTER TABLE ai_runs ADD COLUMN auto_date TEXT;                          -- autop
 ALTER TABLE research_items ADD COLUMN auto_date TEXT;                   -- deliver to the admin on this morning
 ALTER TABLE research_items ADD COLUMN auto_delivered_at TEXT;
 CREATE INDEX research_items_auto ON research_items(auto_date, auto_delivered_at);
+ALTER TABLE research_items ADD COLUMN review_note TEXT;                 -- shown with the PDF (AI sources check, cost)

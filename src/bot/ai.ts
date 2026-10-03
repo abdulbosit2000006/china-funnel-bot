@@ -11,12 +11,12 @@ import {
   type AiClient,
   type AiResponse,
 } from "../ai/openai";
-import { discoverPrompt, repairPrompt, researchPrompt, type Candidate } from "../ai/prompts";
-import { validateResearch } from "../pdf/exhibition";
+import { repairPrompt, type Candidate } from "../ai/prompts";
 import { log } from "../log";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard } from "../telegram/types";
 import { queueResearch } from "./research";
+import { hasSubject, subjectSpec, type Subject } from "./subjects";
 
 export const AI_CALLBACK_PREFIX = "ai:";
 export const AI_LIMIT_SETTING = "ai.daily_limit";
@@ -32,6 +32,8 @@ type Kind = "DISCOVER" | "RESEARCH";
 interface RunRow {
   id: number;
   kind: Kind;
+  subject: Subject;
+  auto_date: string | null;
   status: string;
   request: string;
   chat_id: number;
@@ -62,9 +64,15 @@ async function queueRun(
   kind: Kind,
   request: RunRequest,
   now: Date,
+  subject: Subject = "EXHIBITION",
+  autoDate: string | null = null,
 ): Promise<boolean> {
   if (!ai) {
     await sendMessage(tg, chatId, NO_KEY);
+    return false;
+  }
+  if (!hasSubject(subject)) {
+    await sendMessage(tg, chatId, "Этот тип research ещё не подключён.");
     return false;
   }
   const limit = (await getSetting<number>(db, AI_LIMIT_SETTING)) ?? DEFAULT_DAILY_LIMIT;
@@ -78,31 +86,52 @@ async function queueRun(
   }
   const at = now.toISOString();
   const row = await db
-    .prepare("INSERT INTO ai_runs (kind, request, chat_id, model, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id")
-    .bind(kind, JSON.stringify(request), chatId, ai.model, at, at)
+    .prepare("INSERT INTO ai_runs (kind, subject, auto_date, request, chat_id, model, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id")
+    .bind(kind, subject, autoDate, JSON.stringify(request), chatId, ai.model, at, at)
     .first<{ id: number }>();
-  await logAdminAction(db, adminId, `ai.${kind.toLowerCase()}`, at, { run: row!.id, ...request });
+  await logAdminAction(db, adminId, `ai.${kind.toLowerCase()}`, at, { run: row!.id, subject, autoDate, ...request });
   return true;
 }
 
-/** /find [topic]: look for exhibitions worth a trip. */
-export async function requestDiscovery(tg: Telegram, db: D1Database, ai: AiClient | null, chatId: number, adminId: number, topic: string | null, now: Date) {
-  if (await queueRun(tg, db, ai, chatId, adminId, "DISCOVER", { topic }, now)) {
-    await sendMessage(tg, chatId, `🔎 Ищу выставки${topic ? ` по теме «${escapeHtml(topic)}»` : ""}. Обычно это занимает 2–5 минут, пришлю список.`);
+/** /find [topic] (exhibitions) or /ideas [topic] (business models): a list of candidates. */
+export async function requestDiscovery(
+  tg: Telegram,
+  db: D1Database,
+  ai: AiClient | null,
+  chatId: number,
+  adminId: number,
+  topic: string | null,
+  now: Date,
+  subject: Subject = "EXHIBITION",
+) {
+  if (await queueRun(tg, db, ai, chatId, adminId, "DISCOVER", { topic }, now, subject)) {
+    const what = subject === "EXHIBITION" ? "выставки" : "производственные бизнес-идеи";
+    await sendMessage(tg, chatId, `🔎 Ищу ${what}${topic ? ` по теме «${escapeHtml(topic)}»` : ""}. Обычно это занимает 2–5 минут, пришлю список.`);
   }
 }
 
-/** /research <exhibition>: full research package → PDF for review. */
-export async function requestResearch(tg: Telegram, db: D1Database, ai: AiClient | null, chatId: number, adminId: number, target: Candidate | string, now: Date) {
+/** /research <exhibition> or /business <idea>: full research package → PDF for review. */
+export async function requestResearch(
+  tg: Telegram,
+  db: D1Database,
+  ai: AiClient | null,
+  chatId: number,
+  adminId: number,
+  target: Candidate | string,
+  now: Date,
+  subject: Subject = "EXHIBITION",
+) {
   const request: RunRequest = typeof target === "string" ? { query: target } : { candidate: target };
-  if (await queueRun(tg, db, ai, chatId, adminId, "RESEARCH", request, now)) {
-    const name = typeof target === "string" ? target : `${target.name} ${target.edition}`;
-    await sendMessage(
-      tg,
-      chatId,
-      `🔬 Собираю research: <b>${escapeHtml(name)}</b>. Даты, цены, источники, постер. Обычно 5–10 минут, потом придёт PDF на проверку.`,
-    );
+  if (await queueRun(tg, db, ai, chatId, adminId, "RESEARCH", request, now, subject)) {
+    const name = typeof target === "string" ? target : `${target.name} ${target.edition ?? ""}`.trim();
+    const what = subject === "EXHIBITION" ? "Даты, цены, источники, постер" : "Линия, цены, рынок Узбекистана, расчёт бизнеса";
+    await sendMessage(tg, chatId, `🔬 Собираю research: <b>${escapeHtml(name)}</b>. ${what}. Обычно 5–10 минут, потом придёт PDF на проверку.`);
   }
+}
+
+/** Autopilot: starts a discovery whose winner is researched and delivered in the morning without questions. */
+export async function queueAutopilotRun(tg: Telegram, db: D1Database, ai: AiClient | null, chatId: number, subject: Subject, autoDate: string, now: Date): Promise<boolean> {
+  return queueRun(tg, db, ai, chatId, 0, "DISCOVER", { topic: null }, now, subject, autoDate);
 }
 
 export async function handleAiCallback(
@@ -115,11 +144,12 @@ export async function handleAiCallback(
   const [action, rawRun, rawIdx] = callback.data.slice(AI_CALLBACK_PREFIX.length).split(":");
   await tg.call("answerCallbackQuery", { callback_query_id: callback.id });
   if (action === "d") return requestDiscovery(tg, db, ai, callback.chatId, callback.fromId, null, now);
+  if (action === "b") return requestDiscovery(tg, db, ai, callback.chatId, callback.fromId, null, now, "MANUFACTURING");
   if (action !== "r") return;
   const run = await db.prepare("SELECT * FROM ai_runs WHERE id = ? AND kind = 'DISCOVER' AND status = 'DONE'").bind(Number(rawRun)).first<RunRow>();
   const candidate = run ? (JSON.parse(run.result!) as { candidates: Candidate[] }).candidates[Number(rawIdx)] : undefined;
   if (!candidate) return void (await sendMessage(tg, callback.chatId, "Этот список устарел, запустите поиск ещё раз."));
-  await requestResearch(tg, db, ai, callback.chatId, callback.fromId, candidate, now);
+  await requestResearch(tg, db, ai, callback.chatId, callback.fromId, candidate, now, run!.subject);
 }
 
 // ---------- cron side ----------
@@ -129,8 +159,9 @@ const INCLUDE = ["web_search_call.action.sources"];
 
 function firstPrompt(run: RunRow, now: Date, exclude: string[]): string {
   const req = JSON.parse(run.request) as RunRequest;
-  if (run.kind === "DISCOVER") return discoverPrompt(today(now), req.topic ?? null, exclude);
-  return researchPrompt(today(now), req.candidate ?? req.query ?? "");
+  const spec = subjectSpec(run.subject);
+  if (run.kind === "DISCOVER") return spec.discoverPrompt(today(now), req.topic ?? null, exclude);
+  return spec.researchPrompt(today(now), req.candidate ?? req.query ?? "");
 }
 
 async function update(db: D1Database, id: number, fields: Record<string, unknown>, now: Date) {
@@ -143,7 +174,15 @@ async function update(db: D1Database, id: number, fields: Record<string, unknown
 
 async function fail(tg: Telegram, db: D1Database, run: RunRow, error: string, now: Date, extra = "") {
   await update(db, run.id, { status: "FAILED", error }, now);
-  await sendMessage(tg, run.chat_id, `⚠️ AI-${run.kind === "DISCOVER" ? "поиск" : "research"} не получился: ${escapeHtml(error)}${extra}`);
+  const prefix = run.auto_date ? "⚠️ Автопилот: " : "⚠️ ";
+  await tg.call("sendMessage", {
+    chat_id: run.chat_id,
+    text: `${prefix}AI-${run.kind === "DISCOVER" ? "поиск" : "research"} не получился: ${escapeHtml(error)}${extra}`,
+    parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    // Autopilot works at night: no sound.
+    ...(run.auto_date ? { disable_notification: true } : {}),
+  });
 }
 
 function costLine(run: RunRow): string {
@@ -158,7 +197,7 @@ function validCandidates(raw: unknown): Candidate[] {
   return list
     .filter((c): c is Candidate =>
       typeof c === "object" && c !== null &&
-      ["name", "city", "dates", "official_site", "source_url"].every((k) => str((c as Record<string, unknown>)[k])) &&
+      ["name", "official_site", "source_url"].every((k) => str((c as Record<string, unknown>)[k])) &&
       /^https?:\/\//.test((c as Candidate).official_site),
     )
     .slice(0, 8);
@@ -171,16 +210,27 @@ async function finishDiscovery(tg: Telegram, db: D1Database, run: RunRow, res: A
   } catch (error) {
     return fail(tg, db, run, `ответ не разобран (${error instanceof Error ? error.message : String(error)})`, now);
   }
-  if (!candidates.length) return fail(tg, db, run, "подходящих выставок не нашлось", now);
+  if (!candidates.length) return fail(tg, db, run, "подходящих вариантов не нашлось", now);
   await update(db, run.id, { status: "DONE", result: JSON.stringify({ candidates }) }, now);
+  if (run.auto_date) {
+    // Autopilot picks the first candidate whose source the search actually returned.
+    const seenNow = seenUrls(res);
+    const pick = candidates.find((c) => wasSeen(c.source_url, seenNow)) ?? candidates[0]!;
+    const at = now.toISOString();
+    await db
+      .prepare("INSERT INTO ai_runs (kind, subject, auto_date, request, chat_id, model, created_at, updated_at) VALUES ('RESEARCH', ?, ?, ?, ?, ?, ?, ?)")
+      .bind(run.subject, run.auto_date, JSON.stringify({ candidate: pick }), run.chat_id, run.model, at, at)
+      .run();
+    return;
+  }
   const seen = seenUrls(res);
   const lines = candidates.map((c, i) => {
     const flag = wasSeen(c.source_url, seen) ? "" : " ⚠️ источник не из поиска, проверьте";
     return (
       `<b>${i + 1}. ${escapeHtml(c.name)} ${escapeHtml(c.edition ?? "")}</b>\n` +
-      `📅 ${escapeHtml(c.dates)} · 📍 ${escapeHtml(c.city)}\n` +
+      `${[c.dates, c.city].filter(Boolean).map((x) => escapeHtml(x)).join(" · ")}\n` +
       `🏷 ${escapeHtml(c.industry ?? "")}\n` +
-      `${escapeHtml(c.why ?? "")}\n` +
+      `${escapeHtml((c.why ?? "").slice(0, 300))}\n` +
       `<a href="${escapeHtml(c.source_url)}">источник</a>${flag}`
     );
   });
@@ -190,7 +240,7 @@ async function finishDiscovery(tg: Telegram, db: D1Database, run: RunRow, res: A
   await sendMessage(
     tg,
     run.chat_id,
-    `🔎 <b>Нашёл выставки</b> (даты сверяйте по источнику):\n\n${lines.join("\n\n")}\n\nНажмите на выставку, чтобы собрать по ней research и PDF.\n\n${costLine(run)}`,
+    `🔎 <b>${run.subject === "EXHIBITION" ? "Нашёл выставки</b> (даты сверяйте по источнику)" : "Нашёл бизнес-идеи</b> (цены сверяйте по источнику)"}:\n\n${lines.join("\n\n")}\n\nНажмите на вариант, чтобы собрать по нему research и PDF.\n\n${costLine(run)}`,
     keyboard,
   );
 }
@@ -202,9 +252,11 @@ async function finishResearch(tg: Telegram, db: D1Database, ai: AiClient, run: R
     raw = extractJson(outputText(res));
     if (raw && typeof raw === "object") {
       // Facts we decide, not the model.
-      Object.assign(raw, { research_date: today(now), currency: "USD", sample: false, reserve_pct: (raw as { reserve_pct?: unknown }).reserve_pct ?? 10 });
+      Object.assign(raw, { research_date: today(now), currency: "USD", sample: false });
+      if (run.subject === "EXHIBITION") Object.assign(raw, { reserve_pct: (raw as { reserve_pct?: unknown }).reserve_pct ?? 10 });
     }
-    const result = validateResearch(raw);
+    const spec = subjectSpec(run.subject);
+    const result = spec.validate(raw);
     if (!result.ok) errors = result.errors;
     else {
       const seen = seenUrls(res);
@@ -213,15 +265,13 @@ async function finishResearch(tg: Telegram, db: D1Database, ai: AiClient, run: R
       const warning = unseen.length
         ? `\n\n⚠️ Этих источников не было в результатах поиска, проверьте их до одобрения:\n${unseen.map((s) => `[${s.id}] ${escapeHtml(s.url)}`).join("\n")}`
         : "\n\n✅ Все источники взяты из результатов поиска.";
-      const id = await queueResearch(
-        tg,
-        db,
-        result.data,
-        run.chat_id,
-        now,
-        `🤖 AI-research готов, PDF будет через 1–2 минуты. Проверьте цифры и источники перед одобрением.${warning}\n\n${costLine(run)}`,
-        cost,
-      );
+      const note = `${warning.trim()}\n\n${costLine(run)}`;
+      const id = await queueResearch(tg, db, spec, result.data, run.chat_id, now, {
+        intro: `🤖 AI-research готов, PDF будет через 1–2 минуты. Проверьте цифры и источники перед одобрением.\n\n${note}`,
+        aiCostUsd: cost,
+        autoDate: run.auto_date ?? undefined,
+      });
+      await db.prepare("UPDATE research_items SET review_note = ? WHERE id = ?").bind(note, id).run();
       await update(db, run.id, { status: "DONE", result: JSON.stringify(result.data), research_item_id: id }, now);
       return;
     }

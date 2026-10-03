@@ -36,38 +36,59 @@ h1{margin-top:14px;font-size:92px;line-height:.98;font-weight:800;letter-spacing
 .sample{position:absolute;left:0;right:0;top:0;background:#c8102e;color:#fff;text-align:center;font-weight:700;font-size:16px;padding:6px;letter-spacing:2px}
 `;
 
-export function renderPostCardHtml(brand: Brand, title: string, research: ExhibitionResearch | null): string {
-  const e = research?.exhibition;
-  const heading = e ? `${e.name}${e.edition ? ` ${e.edition}` : ""}` : title;
-  const meta = e
-    ? `<div class="meta"><div><span></span>${esc(e.dates.value)}</div><div><span></span>${esc(e.city)}, Xitoy</div></div>`
+/** What the generic cover shows; each subject (exhibition, business model) fills it in its own way. */
+export interface CardData {
+  tag: string; // top right, e.g. "Ko'rgazma"
+  kicker?: string;
+  heading: string;
+  meta: string[]; // up to 2 short facts with accent squares
+  tagline?: string;
+  chips: string[];
+  box: { k: string; v: string; s?: string; cta: string; small?: boolean };
+  sample?: boolean;
+}
+
+export function renderCardHtml(brand: Brand, card: CardData): string {
+  const meta = card.meta.length
+    ? `<div class="meta">${card.meta.slice(0, 2).map((m) => `<div><span></span>${esc(m)}</div>`).join("")}</div>`
+    : "";
+  const chips = card.chips.length
+    ? `<div class="chips">${card.chips.slice(0, 4).map((c) => `<div class="chip">${esc(c)}</div>`).join("")}</div>`
     : "";
   const box =
-    research
-      ? `<div class="budget"><div class="k">2 kishilik biznes-safar</div><div class="v q">Narxi qancha?</div>` +
-        `<div class="s">aviachipta · mehmonxona · transport</div><div class="pdf">Botda bilib oling</div></div>`
-      : `<div class="budget"><div class="k">Yangi material</div><div class="v" style="font-size:48px">PDF</div><div class="pdf">Botda oling</div></div>`;
-  const phase = e ? (e.phases.find((p) => p.name === e.focus_phase) ?? e.phases[0]) : undefined;
-  const chips = phase
-    ? `<div class="chips">${phase.categories
-        .split(",")
-        .map((c) => c.trim())
-        .filter(Boolean)
-        .slice(0, 4)
-        .map((c) => `<div class="chip">${esc(c)}</div>`)
-        .join("")}</div>`
-    : "";
+    `<div class="budget"><div class="k">${esc(card.box.k)}</div><div class="v${card.box.small ? "" : " q"}"${card.box.small ? ' style="font-size:48px"' : ""}>${esc(card.box.v)}</div>` +
+    `${card.box.s ? `<div class="s">${esc(card.box.s)}</div>` : ""}<div class="pdf">${esc(card.box.cta)}</div></div>`;
   return `<!doctype html><html><head><meta charset="utf-8"><style>${FONT_CSS}${CSS}</style></head><body>
 <div class="deco"></div><div class="deco2"></div>
-${research?.sample ? `<div class="sample">NAMUNA · TEST</div>` : ""}
+${card.sample ? `<div class="sample">NAMUNA · TEST</div>` : ""}
 <div class="wrap">
-  <div class="top"><div class="logo"><span class="mark">${esc(brand.mark)}</span>${esc(brand.name)}</div><div class="tag">${e ? "Ko'rgazma" : "Material"}</div></div>
-  ${e ? `<div class="kicker">Tadbirkorlar uchun · Xitoy</div>` : ""}
-  <h1 style="${heading.length > 22 ? "font-size:68px" : ""}">${esc(heading)}</h1>
+  <div class="top"><div class="logo"><span class="mark">${esc(brand.mark)}</span>${esc(brand.name)}</div><div class="tag">${esc(card.tag)}</div></div>
+  ${card.kicker ? `<div class="kicker">${esc(card.kicker)}</div>` : ""}
+  <h1 style="${card.heading.length > 22 ? "font-size:68px" : ""}">${esc(card.heading)}</h1>
   ${meta}
-  ${e?.tagline ? `<div class="tagline">${esc(e.tagline)}</div>` : ""}
+  ${card.tagline ? `<div class="tagline">${esc(card.tagline)}</div>` : ""}
 </div>
 ${chips}
 ${box}
 </body></html>`;
+}
+
+export function exhibitionCard(title: string, research: ExhibitionResearch | null): CardData {
+  const e = research?.exhibition;
+  if (!e) return { tag: "Material", heading: title, meta: [], chips: [], box: { k: "Yangi material", v: "PDF", cta: "Botda oling", small: true } };
+  const phase = e.phases.find((p) => p.name === e.focus_phase) ?? e.phases[0];
+  return {
+    tag: "Ko'rgazma",
+    kicker: "Tadbirkorlar uchun · Xitoy",
+    heading: `${e.name}${e.edition ? ` ${e.edition}` : ""}`,
+    meta: [e.dates.value, `${e.city}, Xitoy`],
+    tagline: e.tagline,
+    chips: phase ? phase.categories.split(",").map((c) => c.trim()).filter(Boolean) : [],
+    box: { k: "2 kishilik biznes-safar", v: "Narxi qancha?", s: "aviachipta · mehmonxona · transport", cta: "Botda bilib oling" },
+    sample: research?.sample,
+  };
+}
+
+export function renderPostCardHtml(brand: Brand, title: string, research: ExhibitionResearch | null): string {
+  return renderCardHtml(brand, exhibitionCard(title, research));
 }

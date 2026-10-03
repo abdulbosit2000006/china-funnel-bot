@@ -1,20 +1,21 @@
 import { activateLeadMagnet, createFunnelForSlug, createLeadMagnetVersion, logAdminAction, nextLeadMagnetVersion } from "../db";
 import { enqueueJob } from "../jobs";
-import { BRAND_MARK, BRAND_NAME, DEFAULT_CONTENT } from "../pdf/content";
-import { calculateBudget, money, validateResearch, type Budget, type ExhibitionResearch } from "../pdf/exhibition";
+import { BRAND_MARK, BRAND_NAME } from "../pdf/content";
 import type { PdfRenderer } from "../pdf/render";
-import { footerTemplate, renderExhibitionHtml } from "../pdf/template";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard, TgMessage } from "../telegram/types";
 import { botUsername, renderMagnet } from "./magnets";
 import { createPostDraft } from "./posts";
+import { hasSubject, specByResearchKind, subjectSpec, type Researched, type SubjectSpec } from "./subjects";
 
 export const RESEARCH_CALLBACK_PREFIX = "rp:";
 export const RENDER_JOB = "RENDER_EXHIBITION_PDF";
 const MAX_JSON_BYTES = 1024 * 1024;
 
-interface ResearchRow {
+export interface ResearchRow {
   id: number;
+  kind: string;
+  auto_date: string | null;
   slug: string;
   title: string;
   status: string;
@@ -30,18 +31,10 @@ export function isResearchFile(message: TgMessage): boolean {
   return doc.mime_type === "application/json" || /\.json$/i.test(doc.file_name ?? "");
 }
 
-function budgetSummary(data: ExhibitionResearch, budget: Budget): string {
-  const missing = budget.excluded.length
-    ? `\n⚠️ Не вошло в итог (нет цены): ${budget.excluded.map((r) => escapeHtml(r.title)).join(", ")}`
-    : "";
-  return (
-    `<b>${escapeHtml(data.title)}</b>\n` +
-    `slug: <code>${data.slug}</code> · research ${data.research_date}\n` +
-    `Итог на ${data.scenario.people} чел.: <b>${money(budget.total)}</b> (${money(budget.perPerson)} на человека)\n` +
-    `Самая слабая метка во входных данных: ${budget.weakest}` +
-    missing +
-    (data.sample ? "\n🧪 Пакет помечен как образец: в PDF будет водяной знак NAMUNA." : "")
-  );
+/** A manufacturing package has `equipment`; everything else is an exhibition package. */
+function detectSpec(raw: unknown): SubjectSpec {
+  const isManufacturing = typeof raw === "object" && raw !== null && "equipment" in raw;
+  return subjectSpec(isManufacturing && hasSubject("MANUFACTURING") ? "MANUFACTURING" : "EXHIBITION");
 }
 
 /** Admin sent a research package (JSON): validate, store as DRAFT and queue the PDF render. */
@@ -56,39 +49,42 @@ export async function handleResearchUpload(tg: Telegram, db: D1Database, message
   } catch {
     return void (await sendMessage(tg, chatId, "Не удалось прочитать JSON: проверьте, что файл не повреждён."));
   }
-  const result = validateResearch(raw);
+  const spec = detectSpec(raw);
+  const result = spec.validate(raw);
   if (!result.ok) {
     const list = result.errors.slice(0, 15).map((e) => `• ${escapeHtml(e)}`).join("\n");
     const more = result.errors.length > 15 ? `\n…и ещё ${result.errors.length - 15}` : "";
     return void (await sendMessage(tg, chatId, `❌ В research-пакете ошибки, PDF не создан:\n${list}${more}`));
   }
-  const id = await queueResearch(tg, db, result.data, chatId, now, "⏳ Research-пакет принят, PDF будет готов через 1–2 минуты.");
+  const id = await queueResearch(tg, db, spec, result.data, chatId, now, { intro: "⏳ Research-пакет принят, PDF будет готов через 1–2 минуты." });
   await logAdminAction(db, message.from!.id, "research.upload", now.toISOString(), { id, slug: result.data.slug });
 }
 
-/** Stores a valid research package as DRAFT and queues the PDF render; the admin gets the budget summary. */
+/**
+ * Stores a valid research package as DRAFT and queues the PDF render. The admin gets the summary, except for
+ * autopilot packages (autoDate set), which wait quietly for the morning delivery.
+ */
 export async function queueResearch(
   tg: Telegram,
   db: D1Database,
-  data: ExhibitionResearch,
+  spec: SubjectSpec,
+  data: Researched,
   chatId: number,
   now: Date,
-  intro: string,
-  aiCostUsd = 0,
+  opts: { intro: string; aiCostUsd?: number; autoDate?: string },
 ): Promise<number> {
-  const budget = calculateBudget(data);
   const at = now.toISOString();
   const row = await db
     .prepare(
-      `INSERT INTO research_items (kind, title, status, research_date, data, calc, slug, ai_cost_usd, created_at, updated_at)
-       VALUES ('EXHIBITION', ?1, 'DRAFT', ?2, ?3, ?4, ?5, ?6, ?7, ?7) RETURNING id`,
+      `INSERT INTO research_items (kind, title, status, research_date, data, calc, slug, ai_cost_usd, auto_date, created_at, updated_at)
+       VALUES (?1, ?2, 'DRAFT', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9) RETURNING id`,
     )
-    .bind(data.title, data.research_date, JSON.stringify(data), JSON.stringify(budget), data.slug, aiCostUsd, at)
+    .bind(spec.researchKind, data.title, data.research_date, JSON.stringify(data), JSON.stringify(spec.calc(data)), data.slug, opts.aiCostUsd ?? 0, opts.autoDate ?? null, at)
     .first<{ id: number }>();
   await enqueueJob(db, RENDER_JOB, { researchId: row!.id, chatId }, at);
-  await sendMessage(tg, chatId, `${intro}
+  if (!opts.autoDate) await sendMessage(tg, chatId, `${opts.intro}
 
-${budgetSummary(data, budget)}`);
+${spec.summary(data)}`);
   return row!.id;
 }
 
@@ -100,10 +96,11 @@ export async function runRenderJob(
   const { tg, db, files } = deps;
   const item = await db.prepare("SELECT * FROM research_items WHERE id = ?").bind(payload.researchId).first<ResearchRow>();
   if (!item || item.status !== "DRAFT") return;
-  const data = JSON.parse(item.data) as ExhibitionResearch;
-  const budget = calculateBudget(data);
+  const spec = specByResearchKind(item.kind);
+  const data = JSON.parse(item.data) as Researched;
   const brand = { name: BRAND_NAME, mark: BRAND_MARK, botUsername: await botUsername(tg, db) };
-  const pdf = await deps.renderPdf(renderExhibitionHtml(data, budget, brand, DEFAULT_CONTENT), footerTemplate(brand, data));
+  const page = spec.renderPdf(data, brand);
+  const pdf = await deps.renderPdf(page.html, page.footer);
 
   const r2Key = `research/${item.id}/${data.slug}.pdf`;
   await files.put(r2Key, pdf, {
@@ -111,6 +108,14 @@ export async function runRenderJob(
     customMetadata: { research_id: String(item.id), slug: data.slug },
   });
 
+  if (item.auto_date) {
+    // Autopilot: the PDF waits in R2; the morning delivery sends it together with the post.
+    await db
+      .prepare("UPDATE research_items SET status = 'IN_REVIEW', pdf_r2_key = ?, updated_at = ? WHERE id = ?")
+      .bind(r2Key, deps.now.toISOString(), item.id)
+      .run();
+    return;
+  }
   const keyboard: InlineKeyboard = [
     [
       { text: "✅ Одобрить", callback_data: `${RESEARCH_CALLBACK_PREFIX}a:${item.id}` },
@@ -120,7 +125,7 @@ export async function runRenderJob(
   const form = new FormData();
   form.set("chat_id", String(payload.chatId));
   form.set("document", new Blob([pdf], { type: "application/pdf" }), `${data.slug}.pdf`);
-  form.set("caption", `📄 PDF на проверку\n\n${budgetSummary(data, budget)}\n\nПосле одобрения он станет лид-магнитом.`);
+  form.set("caption", `📄 PDF на проверку\n\n${spec.summary(data)}\n\nПосле одобрения он станет лид-магнитом.`);
   form.set("parse_mode", "HTML");
   form.set("reply_markup", JSON.stringify({ inline_keyboard: keyboard }));
   const sent = await tg.upload<{ document?: { file_id: string } }>("sendDocument", form);
@@ -165,14 +170,14 @@ export async function handleResearchCallback(
       slug: item.slug,
       version: await nextLeadMagnetVersion(db, item.slug),
       title: item.title,
-      type: "EXHIBITION_GUIDE",
+      type: specByResearchKind(item.kind).magnetType,
       r2Key: item.pdf_r2_key,
       tgFileId: item.pdf_tg_file_id,
     },
     at,
   );
   await activateLeadMagnet(db, magnet, at);
-  const funnel = await createFunnelForSlug(db, magnet.slug, "EXHIBITION", at);
+  const funnel = await createFunnelForSlug(db, magnet.slug, specByResearchKind(item.kind).funnelKind, at);
   await db
     .prepare(
       `UPDATE research_items SET status = 'ACTIVE', approved_at = ?1, approved_by = ?2, lead_magnet_id = ?3, updated_at = ?1
