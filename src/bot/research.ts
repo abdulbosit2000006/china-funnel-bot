@@ -7,6 +7,7 @@ import { footerTemplate, renderExhibitionHtml } from "../pdf/template";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard, TgMessage } from "../telegram/types";
 import { botUsername, renderMagnet } from "./magnets";
+import { createPostDraft } from "./posts";
 
 export const RESEARCH_CALLBACK_PREFIX = "rp:";
 export const RENDER_JOB = "RENDER_EXHIBITION_PDF";
@@ -156,7 +157,7 @@ export async function handleResearchCallback(
     at,
   );
   await activateLeadMagnet(db, magnet, at);
-  await createFunnelForSlug(db, magnet.slug, "EXHIBITION", at);
+  const funnel = await createFunnelForSlug(db, magnet.slug, "EXHIBITION", at);
   await db
     .prepare(
       `UPDATE research_items SET status = 'ACTIVE', approved_at = ?1, approved_by = ?2, lead_magnet_id = ?3, updated_at = ?1
@@ -172,4 +173,5 @@ export async function handleResearchCallback(
   const fresh = { ...magnet, status: "ACTIVE" as const };
   const view = await renderMagnet(tg, db, fresh);
   await sendMessage(tg, callback.chatId, `✅ Одобрено: PDF стал лид-магнитом, ссылка для поста готова.\n\n${view.text}`, view.keyboard);
+  await createPostDraft(tg, db, callback.chatId, fresh, funnel, at);
 }

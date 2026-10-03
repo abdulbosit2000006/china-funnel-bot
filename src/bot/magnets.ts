@@ -127,6 +127,7 @@ export async function renderMagnet(
     keyboard.push([{ text: "✅ Сделать активной версией", callback_data: `${MAGNET_CALLBACK_PREFIX}a:${id}` }]);
   }
   if (magnet.status === "ACTIVE") {
+    keyboard.push([{ text: "📣 Пост для канала", callback_data: `pp:n:${id}` }]);
     keyboard.push([{ text: "🔗 Создать ссылку для поста", callback_data: `${MAGNET_CALLBACK_PREFIX}c:${id}` }]);
   }
   if (magnet.status !== "ARCHIVED") {

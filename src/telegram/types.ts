@@ -10,6 +10,7 @@ export interface TgUser {
 export interface TgChat {
   id: number;
   type: "private" | "group" | "supergroup" | "channel";
+  title?: string;
 }
 
 export interface TgMessage {

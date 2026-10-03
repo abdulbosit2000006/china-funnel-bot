@@ -21,6 +21,7 @@ export function fakeTelegram(files: Record<string, string> = {}): Telegram & { c
     async call<T>(method: string, params: Record<string, unknown>): Promise<T> {
       calls.push({ method, params });
       if (method === "getMe") return { username: "test_bot" } as T;
+      if (method === "sendMessage") return { message_id: 5000 + calls.length } as T;
       if (method === "getFile") {
         const id = String(params.file_id);
         return { file_path: files[`documents/${id}.json`] !== undefined ? `documents/${id}.json` : `documents/${id}.pdf` } as T;
