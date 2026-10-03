@@ -139,7 +139,7 @@ describe("client funnel", () => {
     expect(String(tg.calls[0]!.params.text)).toContain("mavjud emas");
   });
 
-  it("'Muhokama qilmoqchiman' marks INTERESTED once and notifies the admin with history", async () => {
+  it("'Muhokama qilmoqchiman' marks INTERESTED once, notifies the admin and starts the questions", async () => {
     const { app, tg } = makeApp();
     const { code, magnet } = await uploadAndActivate(app, "canton", "fc");
     await postUpdate(app, messageUpdate(CLIENT_ID, `/start ${code}`));
@@ -153,8 +153,9 @@ describe("client funnel", () => {
     expect(String(toAdmin[0]!.params.text)).toContain("canton guide");
     expect(String(toAdmin[0]!.params.text)).toContain(code);
     const toClient = tg.calls.filter((c) => c.method === "sendMessage" && c.params.chat_id === CLIENT_ID).map((c) => String(c.params.text));
-    expect(toClient[0]).toContain("mutaxassisga yuborildi");
-    expect(toClient[1]).toContain("allaqachon");
+    expect(toClient[0]).toContain("bir nechta qisqa savol");
+    expect(toClient[1]).toContain("1/3. Necha kishi");
+    expect(toClient[2]).toContain("allaqachon");
     const lead = await env.DB.prepare("SELECT l.stage, l.score FROM leads l JOIN users u ON u.id = l.user_id WHERE u.tg_user_id = ?")
       .bind(CLIENT_ID).first<{ stage: string; score: number }>();
     expect(lead).toEqual({ stage: "INTERESTED", score: 4 });

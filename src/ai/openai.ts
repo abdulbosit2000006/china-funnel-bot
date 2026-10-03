@@ -24,11 +24,17 @@ export interface AiClient {
   model: string;
   create(body: Record<string, unknown>): Promise<AiResponse>;
   get(id: string): Promise<AiResponse>;
+  /** Speech to text (founder's voice notes for cases). Optional so the provider can be swapped. */
+  transcribe?(audio: Blob, filename: string): Promise<string>;
 }
+
+/** Voice transcription price per minute (gpt-4o-mini-transcribe list price); used for the budget. */
+export const TRANSCRIBE_USD_PER_MINUTE = 0.003;
+export const DEFAULT_TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe";
 
 const API = "https://api.openai.com/v1/responses";
 
-export function createOpenAI(apiKey: string, model: string, fetchUrl: typeof fetch = fetch): AiClient {
+export function createOpenAI(apiKey: string, model: string, fetchUrl: typeof fetch = fetch, transcribeModel = DEFAULT_TRANSCRIBE_MODEL): AiClient {
   async function send(url: string, init: RequestInit): Promise<AiResponse> {
     const res = await fetchUrl(url, {
       ...init,
@@ -43,6 +49,20 @@ export function createOpenAI(apiKey: string, model: string, fetchUrl: typeof fet
     model,
     create: (body) => send(API, { method: "POST", body: JSON.stringify({ model, ...body }) }),
     get: (id) => send(`${API}/${encodeURIComponent(id)}?include[]=web_search_call.action.sources`, { method: "GET" }),
+    async transcribe(audio, filename) {
+      const form = new FormData();
+      form.set("model", transcribeModel);
+      form.set("file", audio, filename);
+      const res = await fetchUrl("https://api.openai.com/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { authorization: `Bearer ${apiKey}` },
+        body: form,
+        signal: AbortSignal.timeout(25_000),
+      });
+      const body = (await res.json().catch(() => null)) as { text?: string; error?: { message?: string } } | null;
+      if (!res.ok || typeof body?.text !== "string") throw new Error(`OpenAI ${res.status}: ${body?.error?.message ?? "no text"}`);
+      return body.text;
+    },
   };
 }
 

@@ -22,6 +22,15 @@ export interface TgMessage {
   caption?: string;
   document?: TgDocument;
   photo?: TgPhotoSize[];
+  voice?: TgVoice;
+}
+
+export interface TgVoice {
+  file_id: string;
+  file_unique_id: string;
+  duration: number;
+  mime_type?: string;
+  file_size?: number;
 }
 
 export interface TgPhotoSize {

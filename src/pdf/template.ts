@@ -13,7 +13,7 @@ export interface BrandContent {
   cta: { title: string; text: string };
 }
 
-const LABEL_UZ: Record<DataLabel, string> = {
+export const LABEL_UZ: Record<DataLabel, string> = {
   VERIFIED: "Rasmiy manba bilan tasdiqlangan",
   "MARKET DATA": "Bozor / soha manbasidan",
   ASSUMPTION: "Bizning farazimiz",
@@ -22,10 +22,10 @@ const LABEL_UZ: Record<DataLabel, string> = {
   UNKNOWN: "Ma'lumot yetarli emas, tekshirilishi kerak",
 };
 
-const esc = (s: unknown) =>
+export const esc = (s: unknown) =>
   String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-const badge = (label: string) => `<span class="badge b-${label.replace(" ", "-").toLowerCase()}">${label}</span>`;
-const src = (id: number | null | undefined) => (id ? `<sup class="src">[${id}]</sup>` : "");
+export const badge = (label: string) => `<span class="badge b-${label.replace(" ", "-").toLowerCase()}">${label}</span>`;
+export const src = (id: number | null | undefined) => (id ? `<sup class="src">[${id}]</sup>` : "");
 const MONTHS = ["yanvar", "fevral", "mart", "aprel", "may", "iyun", "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"];
 export const fmtDate = (iso: string) => {
   const [y, mo, d] = iso.split("-").map(Number);
