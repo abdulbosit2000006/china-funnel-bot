@@ -119,6 +119,7 @@ export function postUpdate(app: ReturnType<typeof createApp>, update: TgUpdate, 
 export function fakeAi() {
   const created: Record<string, unknown>[] = [];
   const answers: Record<string, AiResponse> = {};
+  const transcribed: string[] = [];
   const client: AiClient = {
     model: "gpt-6.1-sol",
     async create(body) {
@@ -128,8 +129,12 @@ export function fakeAi() {
     async get(id) {
       return answers[id] ?? { id, status: "in_progress" };
     },
+    async transcribe(audio, filename) {
+      transcribed.push(`${filename}:${audio.size}`);
+      return "Mijoz Toshkentdan, Aziz aka, telefon +998 90 123 45 67. Zavod 18% arzonroq chiqdi, liniya 2 oyda keldi.";
+    },
   };
-  return Object.assign(client, { created, answers });
+  return Object.assign(client, { created, answers, transcribed });
 }
 
 export function aiAnswer(id: string, text: string, sourceUrls: string[] = []): AiResponse {

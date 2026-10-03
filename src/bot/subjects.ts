@@ -32,7 +32,7 @@ export interface SubjectSpec {
   renderPdf(data: Researched, brand: Brand, imageSrc?: string | null): { html: string; footer: string };
   /** Photo for the PDF (fetched by the render job), if any. */
   pdfImageUrl(data: Researched): string | undefined;
-  caption(magnet: LeadMagnetRow, data: Researched | null): string;
+  caption(magnet: LeadMagnetRow, data: Researched | null, opts?: { seriesNo?: number | null }): string;
   ctaButton: string;
   card(title: string, data: Researched | null): CardData;
   posterUrl(data: Researched): string | undefined;
@@ -71,7 +71,7 @@ const exhibition: SubjectSpec = {
     return { html: renderExhibitionHtml(data, calculateBudget(data), brand, DEFAULT_CONTENT), footer: footerTemplate(brand, data) };
   },
   caption: (magnet, raw) => buildPostText(magnet, raw as unknown as ExhibitionResearch | null),
-  ctaButton: "💰 Safar narxini bilish",
+  ctaButton: "✈️ Safar hisobini olish",
   card: (title, raw) => exhibitionCard(title, raw as unknown as ExhibitionResearch | null),
   posterUrl: (raw) => (raw as unknown as ExhibitionResearch).exhibition.poster_url,
   pdfImageUrl: () => undefined,
@@ -108,8 +108,9 @@ const manufacturing: SubjectSpec = {
       footer: manufacturingFooter(brand, data),
     };
   },
-  caption: (magnet, raw) => (raw ? manufacturingCaption(raw as unknown as ManufacturingResearch) : buildPostText(magnet, null)),
-  ctaButton: "📊 Biznes hisob-kitobini olish",
+  caption: (magnet, raw, opts) => (raw ? manufacturingCaption(raw as unknown as ManufacturingResearch, opts?.seriesNo) : buildPostText(magnet, null)),
+  // CTA texts from Content Strategy V1 (Abdul, 2026-10-03).
+  ctaButton: "📊 To'liq biznes hisob-kitobini olish",
   card(title, raw) {
     const data = raw as unknown as ManufacturingResearch | null;
     if (!data) return exhibitionCard(title, null);

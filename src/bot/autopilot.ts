@@ -1,5 +1,7 @@
-// Autopilot: on planned days the bot researches a topic at night and at 09:00 sends the founder a ready
-// PDF + post. One tap publishes both. Nothing reaches the channel or clients without that tap.
+// Autopilot: PDF research that finished for a day (Monday business model, Friday exhibition from the weekly plan,
+// or /autopilot now) is turned into a draft lead magnet + post and sent to the founder at 09:00.
+// One tap publishes both. Nothing reaches the channel or clients without that tap.
+// Which topics run on which day is decided by the weekly content plan (plan.ts), not here.
 import type { AiClient } from "../ai/openai";
 import { createFunnelForSlug, createLeadMagnetVersion, getSetting, logAdminAction, nextLeadMagnetVersion, putSetting } from "../db";
 import { enqueueJob } from "../jobs";
@@ -13,21 +15,8 @@ import { specByResearchKind, type Subject } from "./subjects";
 
 export const AUTOPILOT_JOB = "AUTOPILOT_DELIVER";
 export const AUTOPILOT_ENABLED = "autopilot.enabled";
-export const AUTOPILOT_PLAN = "autopilot.plan";
-const LAST_START = "autopilot.last_start";
-/** Research starts after this local hour so it is ready by the delivery hour. */
-const START_HOUR = 1;
 export const DELIVERY_HOUR = 9;
-
-/** Weekday (0 = Sunday) → subject. Default: 2 exhibitions and 2 business ideas a week. */
-export type Plan = Record<string, Subject>;
-export const DEFAULT_PLAN: Plan = { "1": "EXHIBITION", "2": "MANUFACTURING", "4": "EXHIBITION", "5": "MANUFACTURING" };
-const DAY_NAMES = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
 const SUBJECT_NAMES: Record<Subject, string> = { EXHIBITION: "выставка", MANUFACTURING: "бизнес-идея" };
-
-export async function autopilotPlan(db: D1Database): Promise<Plan> {
-  return (await getSetting<Plan>(db, AUTOPILOT_PLAN)) ?? DEFAULT_PLAN;
-}
 
 export async function autopilotEnabled(db: D1Database): Promise<boolean> {
   return (await getSetting<boolean>(db, AUTOPILOT_ENABLED)) ?? true;
@@ -42,23 +31,12 @@ interface Ctx {
   timeZone: string;
 }
 
-/** Every cron tick: start today's research at night, hand ready bundles to the job queue from 09:00. */
+/** Every cron tick: hand ready PDF bundles to the job queue (today's from 09:00, older ones right away). */
 export async function runAutopilot(ctx: Ctx): Promise<void> {
   const owner = [...ctx.admins][0];
-  if (!ctx.ai || owner === undefined) return;
+  if (owner === undefined) return;
   const local = localTime(ctx.now, ctx.timeZone);
   const at = ctx.now.toISOString();
-
-  if (local.hour >= START_HOUR && (await autopilotEnabled(ctx.db))) {
-    const subject = (await autopilotPlan(ctx.db))[String(local.weekday)];
-    // One attempt per day, even if it is refused (e.g. the daily AI limit): no retry loop every minute.
-    const started = (await getSetting<string>(ctx.db, LAST_START)) === local.date;
-    if (subject && !started) {
-      await putSetting(ctx.db, LAST_START, local.date);
-      const ok = await queueAutopilotRun(ctx.tg, ctx.db, ctx.ai, owner, subject, local.date, ctx.now);
-      log.info("autopilot.start", { date: local.date, subject, ok });
-    }
-  }
 
   // Deliver what is ready: today's after 09:00, anything older right away (e.g. research that finished late).
   const ready = await ctx.db
@@ -127,15 +105,14 @@ export async function handleAutopilotCommand(ctx: Ctx, chatId: number, adminId: 
     return;
   }
   const enabled = await autopilotEnabled(ctx.db);
-  const plan = await autopilotPlan(ctx.db);
-  const days = [1, 2, 3, 4, 5, 6, 0].filter((d) => plan[String(d)]).map((d) => `${DAY_NAMES[d]}: ${SUBJECT_NAMES[plan[String(d)]!]}`);
   await sendMessage(
     ctx.tg,
     chatId,
     `🤖 <b>Автопилот ${enabled ? "включён" : "выключен"}</b>\n\n` +
-      `План: ${escapeHtml(days.join(", ") || "пусто")}\n` +
-      `Ночью бот сам выбирает тему и делает research, в ${DELIVERY_HOUR}:00 присылает PDF и пост. Публикация только по вашей кнопке.\n` +
+      `По субботам в 12:00 бот предлагает план недели (пн бизнес-модель, ср доверие, пт возможность, вс инсайт), вы выбираете темы. ` +
+      `Ночью перед днём поста бот готовит текст или PDF, в ${DELIVERY_HOUR}:00 присылает на проверку. Публикация только по вашей кнопке.\n` +
       (ctx.ai ? "" : "\n⚠️ Нет ключа OpenAI, автопилот не работает.\n") +
-      `\n<code>/autopilot off</code>, <code>/autopilot on</code>\n<code>/autopilot now exhibition</code> или <code>/autopilot now business</code>: запустить прямо сейчас`,
+      `\n/week: что запланировано, /plan: план на следующую неделю\n` +
+      `<code>/autopilot off</code>, <code>/autopilot on</code>\n<code>/autopilot now exhibition</code> или <code>/autopilot now business</code>: PDF вне плана прямо сейчас`,
   );
 }

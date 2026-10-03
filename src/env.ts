@@ -10,6 +10,7 @@ export interface Env {
   ADMIN_TG_IDS: string; // comma-separated Telegram user ids
   OPENAI_API_KEY?: string; // optional: enables AI research
   OPENAI_MODEL?: string; // var, defaults to DEFAULT_AI_MODEL
+  OPENAI_TRANSCRIBE_MODEL?: string; // var, defaults to DEFAULT_TRANSCRIBE_MODEL
 }
 
 export function parseAdminIds(raw: string | undefined): Set<number> {

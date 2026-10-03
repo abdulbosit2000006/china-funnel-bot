@@ -2,6 +2,7 @@ import { dashboardStats, logAdminAction } from "../db";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard } from "../telegram/types";
 import { renderMagnetList } from "./magnets";
+import { renderWeek } from "./plan";
 import { renderLeads, renderStatistics } from "./stats";
 import { adminTexts } from "./texts";
 
@@ -12,7 +13,7 @@ const SECTIONS: { key: string; title: string }[] = [
   { key: "dashboard", title: "📊 Dashboard" },
   { key: "research", title: "🔎 Research" },
   { key: "magnets", title: "📄 Lead Magnets" },
-  { key: "content", title: "📝 Content" },
+  { key: "content", title: "🗓 Эта неделя" },
   { key: "publish", title: "📢 Publish" },
   { key: "leads", title: "🔥 Leads" },
   { key: "stats", title: "📈 Statistics" },
@@ -35,11 +36,15 @@ export async function sendAdminMenu(tg: Telegram, chatId: number): Promise<void>
   await sendMessage(tg, chatId, adminTexts.menuTitle, adminMenuKeyboard());
 }
 
-async function renderSection(db: D1Database, key: string, now: Date): Promise<{ text: string; keyboard: InlineKeyboard }> {
+async function renderSection(db: D1Database, key: string, now: Date, timeZone: string): Promise<{ text: string; keyboard: InlineKeyboard }> {
   if (key === "menu") return { text: adminTexts.menuTitle, keyboard: adminMenuKeyboard() };
   const section = SECTIONS.find((s) => s.key === key);
   if (!section) return { text: adminTexts.menuTitle, keyboard: adminMenuKeyboard() };
   if (key === "magnets") return renderMagnetList(db);
+  if (key === "content") {
+    const week = await renderWeek(db, now, timeZone);
+    return { text: week.text, keyboard: [...week.keyboard, ...backKeyboard] };
+  }
   if (key === "leads") return { text: await renderLeads(db), keyboard: backKeyboard };
   if (key === "stats") return { text: await renderStatistics(db, now), keyboard: backKeyboard };
   if (key === "research") {
@@ -49,7 +54,10 @@ async function renderSection(db: D1Database, key: string, now: Date): Promise<{ 
       `• <b>🔎 Найти выставки</b> или <code>/find металл</code>: список подходящих выставок, по любой можно запустить research.\n` +
       `• <code>/research CIIF Shanghai 2027</code>: research сразу по названию.\n` +
       `• <b>💡 Найти бизнес-идеи</b> или <code>/ideas упаковка</code>, <code>/business производство бумажных стаканов</code>: производственная бизнес-модель с расчётом.\n` +
-      `• <code>/autopilot</code>: каждую неделю 2 выставки и 2 бизнес-идеи, готовый пост с PDF в 9:00.\n` +
+      `• По субботам в 12:00 план недели: пн бизнес-модель с PDF, ср доверие (кейсы, советы), пт возможность, вс инсайт. <code>/week</code>, <code>/plan</code>.\n` +
+      `• <code>/case</code>: кейс из ваших заметок и голосовых, <code>/breaking</code>: срочный пост по новости.\n` +
+      `• <code>/expo</code>: ваши выставки (бот берёт выставки только оттуда), <code>/season on|off</code>.\n` +
+      `• <code>/budget</code>: расход OpenAI за месяц и лимит, <code>/views</code>: просмотры постов.\n` +
       `• Можно прислать готовый research-пакет файлом .json.`;
     return {
       text,
@@ -80,9 +88,10 @@ export async function handleAdminCallback(
   db: D1Database,
   callback: { id: string; fromId: number; chatId: number; messageId: number; data: string },
   now: Date,
+  timeZone = "Asia/Tashkent",
 ): Promise<void> {
   const key = callback.data.slice(ADMIN_CALLBACK_PREFIX.length);
-  const { text, keyboard } = await renderSection(db, key, now);
+  const { text, keyboard } = await renderSection(db, key, now, timeZone);
   await tg.call("answerCallbackQuery", { callback_query_id: callback.id });
   await tg.call("editMessageText", {
     chat_id: callback.chatId,

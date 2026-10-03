@@ -15,6 +15,7 @@ import { repairPrompt, type Candidate } from "../ai/prompts";
 import { log } from "../log";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard } from "../telegram/types";
+import { budgetAllows } from "./budget";
 import { queueResearch } from "./research";
 import { hasSubject, subjectSpec, type Subject } from "./subjects";
 
@@ -27,13 +28,14 @@ const MAX_ROUNDS = 2;
 const MAX_RUN_MINUTES = 30;
 const NO_KEY = "🔑 OpenAI не подключён: добавьте секрет OPENAI_API_KEY в Cloudflare (docs/setup-cloudflare.md, шаг «AI-research»).";
 
-type Kind = "DISCOVER" | "RESEARCH";
+export type Kind = "DISCOVER" | "RESEARCH" | "PLAN" | "EQUIPMENT" | "DRAFT" | "CASE";
 
-interface RunRow {
+export interface RunRow {
   id: number;
   kind: Kind;
   subject: Subject;
   auto_date: string | null;
+  slot_id: number | null;
   status: string;
   request: string;
   chat_id: number;
@@ -47,15 +49,25 @@ interface RunRow {
   created_at: string;
 }
 
-interface RunRequest {
+export interface RunRequest {
   topic?: string | null;
   candidate?: Candidate;
   query?: string;
+  /** Machine the founder confirmed for a business model (Monday rubric): the research must use it. */
+  equipment?: unknown;
+  /** Content System runs keep their own input here. */
+  [key: string]: unknown;
+}
+
+export interface QueueOptions {
+  subject?: Subject;
+  autoDate?: string | null;
+  slotId?: number | null;
 }
 
 const today = (now: Date) => now.toISOString().slice(0, 10);
 
-async function queueRun(
+export async function queueRun(
   tg: Telegram,
   db: D1Database,
   ai: AiClient | null,
@@ -64,33 +76,34 @@ async function queueRun(
   kind: Kind,
   request: RunRequest,
   now: Date,
-  subject: Subject = "EXHIBITION",
-  autoDate: string | null = null,
-): Promise<boolean> {
+  opts: QueueOptions = {},
+): Promise<number | null> {
+  const subject = opts.subject ?? "EXHIBITION";
   if (!ai) {
     await sendMessage(tg, chatId, NO_KEY);
-    return false;
+    return null;
   }
   if (!hasSubject(subject)) {
     await sendMessage(tg, chatId, "Этот тип research ещё не подключён.");
-    return false;
+    return null;
   }
   const limit = (await getSetting<number>(db, AI_LIMIT_SETTING)) ?? DEFAULT_DAILY_LIMIT;
   const used = await db
-    .prepare("SELECT COUNT(*) AS n FROM ai_runs WHERE created_at >= ?")
+    .prepare("SELECT COUNT(*) AS n FROM ai_runs WHERE created_at >= ? AND kind != 'TRANSCRIBE'")
     .bind(`${today(now)}T00:00:00.000Z`)
     .first<{ n: number }>();
   if ((used?.n ?? 0) >= limit) {
     await sendMessage(tg, chatId, `⛔ Дневной лимит AI-запросов (${limit}) исчерпан. Это защита бюджета OpenAI; завтра лимит обновится.`);
-    return false;
+    return null;
   }
+  if (!(await budgetAllows(tg, db, chatId, now))) return null;
   const at = now.toISOString();
   const row = await db
-    .prepare("INSERT INTO ai_runs (kind, subject, auto_date, request, chat_id, model, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id")
-    .bind(kind, subject, autoDate, JSON.stringify(request), chatId, ai.model, at, at)
+    .prepare("INSERT INTO ai_runs (kind, subject, auto_date, slot_id, request, chat_id, model, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id")
+    .bind(kind, subject, opts.autoDate ?? null, opts.slotId ?? null, JSON.stringify(request), chatId, ai.model, at, at)
     .first<{ id: number }>();
-  await logAdminAction(db, adminId, `ai.${kind.toLowerCase()}`, at, { run: row!.id, subject, autoDate, ...request });
-  return true;
+  await logAdminAction(db, adminId, `ai.${kind.toLowerCase()}`, at, { run: row!.id, subject, autoDate: opts.autoDate, slot: opts.slotId });
+  return row!.id;
 }
 
 /** /find [topic] (exhibitions) or /ideas [topic] (business models): a list of candidates. */
@@ -104,7 +117,7 @@ export async function requestDiscovery(
   now: Date,
   subject: Subject = "EXHIBITION",
 ) {
-  if (await queueRun(tg, db, ai, chatId, adminId, "DISCOVER", { topic }, now, subject)) {
+  if (await queueRun(tg, db, ai, chatId, adminId, "DISCOVER", { topic }, now, { subject })) {
     const what = subject === "EXHIBITION" ? "выставки" : "производственные бизнес-идеи";
     await sendMessage(tg, chatId, `🔎 Ищу ${what}${topic ? ` по теме «${escapeHtml(topic)}»` : ""}. Обычно это занимает 2–5 минут, пришлю список.`);
   }
@@ -122,7 +135,7 @@ export async function requestResearch(
   subject: Subject = "EXHIBITION",
 ) {
   const request: RunRequest = typeof target === "string" ? { query: target } : { candidate: target };
-  if (await queueRun(tg, db, ai, chatId, adminId, "RESEARCH", request, now, subject)) {
+  if (await queueRun(tg, db, ai, chatId, adminId, "RESEARCH", request, now, { subject })) {
     const name = typeof target === "string" ? target : `${target.name} ${target.edition ?? ""}`.trim();
     const what = subject === "EXHIBITION" ? "Даты, цены, источники, постер" : "Линия, цены, рынок Узбекистана, расчёт бизнеса";
     await sendMessage(tg, chatId, `🔬 Собираю research: <b>${escapeHtml(name)}</b>. ${what}. Обычно 5–10 минут, потом придёт PDF на проверку.`);
@@ -131,7 +144,7 @@ export async function requestResearch(
 
 /** Autopilot: starts a discovery whose winner is researched and delivered in the morning without questions. */
 export async function queueAutopilotRun(tg: Telegram, db: D1Database, ai: AiClient | null, chatId: number, subject: Subject, autoDate: string, now: Date): Promise<boolean> {
-  return queueRun(tg, db, ai, chatId, 0, "DISCOVER", { topic: null }, now, subject, autoDate);
+  return (await queueRun(tg, db, ai, chatId, 0, "DISCOVER", { topic: null }, now, { subject, autoDate })) !== null;
 }
 
 export async function handleAiCallback(
@@ -154,17 +167,43 @@ export async function handleAiCallback(
 
 // ---------- cron side ----------
 
-const TOOLS = [{ type: "web_search", search_context_size: "medium" }];
+/** What a Content System run kind needs from the runner: its prompt and what to do with the answer. */
+export interface RunHandler {
+  prompt(db: D1Database, run: RunRow, request: RunRequest, now: Date): Promise<string>;
+  /** false: no web search (e.g. a case from the founder's own notes). */
+  webSearch: boolean;
+  /** Returns the problems to send back as a repair round, or nothing when the answer was used. */
+  finish(ctx: FinishContext, run: RunRow, res: AiResponse): Promise<string[] | void>;
+}
+
+export interface FinishContext {
+  tg: Telegram;
+  db: D1Database;
+  ai: AiClient;
+  now: Date;
+  /** Admin ids, for runs that report to the owner. */
+  admins: Set<number>;
+  timeZone: string;
+}
+
+export type RunHandlers = Partial<Record<Kind, RunHandler>>;
+
+export const TOOLS = [{ type: "web_search", search_context_size: "medium" }];
 const INCLUDE = ["web_search_call.action.sources"];
 
 function firstPrompt(run: RunRow, now: Date, exclude: string[]): string {
   const req = JSON.parse(run.request) as RunRequest;
   const spec = subjectSpec(run.subject);
   if (run.kind === "DISCOVER") return spec.discoverPrompt(today(now), req.topic ?? null, exclude);
-  return spec.researchPrompt(today(now), req.candidate ?? req.query ?? "");
+  const prompt = spec.researchPrompt(today(now), req.candidate ?? req.query ?? "");
+  if (!req.equipment) return prompt;
+  return `${prompt}
+
+ВАЖНО: владелец уже выбрал и подтвердил оборудование. Используй именно эту линию (производитель, модель, цена, характеристики и фото), не ищи другую; недостающее (доставка, таможня, рынок, сырьё, расходы) найди поиском:
+${JSON.stringify(req.equipment)}`;
 }
 
-async function update(db: D1Database, id: number, fields: Record<string, unknown>, now: Date) {
+export async function updateRun(db: D1Database, id: number, fields: Record<string, unknown>, now: Date) {
   const keys = Object.keys(fields);
   await db
     .prepare(`UPDATE ai_runs SET ${keys.map((k) => `${k} = ?`).join(", ")}, updated_at = ? WHERE id = ?`)
@@ -172,12 +211,23 @@ async function update(db: D1Database, id: number, fields: Record<string, unknown
     .run();
 }
 
-async function fail(tg: Telegram, db: D1Database, run: RunRow, error: string, now: Date, extra = "") {
-  await update(db, run.id, { status: "FAILED", error }, now);
+export async function fail(tg: Telegram, db: D1Database, run: RunRow, error: string, now: Date, extra = "") {
+  await updateRun(db, run.id, { status: "FAILED", error }, now);
+  if (run.kind === "PLAN") {
+    const planId = (JSON.parse(run.request) as { planId?: number }).planId;
+    if (planId) await db.prepare("UPDATE content_plans SET status = 'FAILED' WHERE id = ? AND status = 'PLANNING'").bind(planId).run();
+  }
+  if (run.slot_id) {
+    // The week view shows why this slot has no post.
+    await db
+      .prepare("UPDATE plan_slots SET status = 'FAILED', note = ?, updated_at = ? WHERE id = ? AND status NOT IN ('PUBLISHED','SKIPPED','REJECTED')")
+      .bind(error.slice(0, 300), now.toISOString(), run.slot_id)
+      .run();
+  }
   const prefix = run.auto_date ? "⚠️ Автопилот: " : "⚠️ ";
   await tg.call("sendMessage", {
     chat_id: run.chat_id,
-    text: `${prefix}AI-${run.kind === "DISCOVER" ? "поиск" : "research"} не получился: ${escapeHtml(error)}${extra}`,
+    text: `${prefix}AI-${KIND_NAMES[run.kind]} не получился: ${escapeHtml(error)}${extra}`,
     parse_mode: "HTML",
     link_preview_options: { is_disabled: true },
     // Autopilot works at night: no sound.
@@ -185,7 +235,16 @@ async function fail(tg: Telegram, db: D1Database, run: RunRow, error: string, no
   });
 }
 
-function costLine(run: RunRow): string {
+const KIND_NAMES: Record<Kind, string> = {
+  DISCOVER: "поиск",
+  RESEARCH: "research",
+  PLAN: "план недели",
+  EQUIPMENT: "поиск станка",
+  DRAFT: "черновик поста",
+  CASE: "черновик кейса",
+};
+
+export function costLine(run: RunRow): string {
   const usd = estimateCostUsd(run.model ?? "", run.input_tokens, run.output_tokens, run.web_searches);
   return `🤖 ${escapeHtml(run.model ?? "")} · поисков: ${run.web_searches} · токены ${run.input_tokens}/${run.output_tokens}${usd !== null ? ` · ≈$${usd.toFixed(2)}` : ""}`;
 }
@@ -211,15 +270,15 @@ async function finishDiscovery(tg: Telegram, db: D1Database, run: RunRow, res: A
     return fail(tg, db, run, `ответ не разобран (${error instanceof Error ? error.message : String(error)})`, now);
   }
   if (!candidates.length) return fail(tg, db, run, "подходящих вариантов не нашлось", now);
-  await update(db, run.id, { status: "DONE", result: JSON.stringify({ candidates }) }, now);
+  await updateRun(db, run.id, { status: "DONE", result: JSON.stringify({ candidates }) }, now);
   if (run.auto_date) {
     // Autopilot picks the first candidate whose source the search actually returned.
     const seenNow = seenUrls(res);
     const pick = candidates.find((c) => wasSeen(c.source_url, seenNow)) ?? candidates[0]!;
     const at = now.toISOString();
     await db
-      .prepare("INSERT INTO ai_runs (kind, subject, auto_date, request, chat_id, model, created_at, updated_at) VALUES ('RESEARCH', ?, ?, ?, ?, ?, ?, ?)")
-      .bind(run.subject, run.auto_date, JSON.stringify({ candidate: pick }), run.chat_id, run.model, at, at)
+      .prepare("INSERT INTO ai_runs (kind, subject, auto_date, slot_id, request, chat_id, model, created_at, updated_at) VALUES ('RESEARCH', ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(run.subject, run.auto_date, run.slot_id, JSON.stringify({ candidate: pick }), run.chat_id, run.model, at, at)
       .run();
     return;
   }
@@ -243,6 +302,20 @@ async function finishDiscovery(tg: Telegram, db: D1Database, run: RunRow, res: A
     `🔎 <b>${run.subject === "EXHIBITION" ? "Нашёл выставки</b> (даты сверяйте по источнику)" : "Нашёл бизнес-идеи</b> (цены сверяйте по источнику)"}:\n\n${lines.join("\n\n")}\n\nНажмите на вариант, чтобы собрать по нему research и PDF.\n\n${costLine(run)}`,
     keyboard,
   );
+}
+
+/** Sends our validator's errors back to the model. False when the rounds are used up. */
+async function repair(db: D1Database, ai: AiClient, run: RunRow, errors: string[], now: Date, webSearch: boolean): Promise<boolean> {
+  if (run.rounds >= MAX_ROUNDS) return false;
+  const next = await ai.create({
+    background: true,
+    previous_response_id: run.response_id,
+    input: [{ role: "user", content: repairPrompt(errors) }],
+    ...(webSearch ? { tools: TOOLS, include: INCLUDE } : {}),
+  });
+  await updateRun(db, run.id, { response_id: next.id, rounds: run.rounds + 1 }, now);
+  log.info("ai.repair", { run: run.id, errors: errors.length });
+  return true;
 }
 
 async function finishResearch(tg: Telegram, db: D1Database, ai: AiClient, run: RunRow, res: AiResponse, now: Date) {
@@ -270,26 +343,19 @@ async function finishResearch(tg: Telegram, db: D1Database, ai: AiClient, run: R
         intro: `🤖 AI-research готов, PDF будет через 1–2 минуты. Проверьте цифры и источники перед одобрением.\n\n${note}`,
         aiCostUsd: cost,
         autoDate: run.auto_date ?? undefined,
+        slotId: run.slot_id ?? undefined,
       });
       await db.prepare("UPDATE research_items SET review_note = ? WHERE id = ?").bind(note, id).run();
-      await update(db, run.id, { status: "DONE", result: JSON.stringify(result.data), research_item_id: id }, now);
+      await updateRun(db, run.id, { status: "DONE", result: JSON.stringify(result.data), research_item_id: id }, now);
+      if (run.slot_id) {
+        await db.prepare("UPDATE plan_slots SET research_item_id = ?, status = 'RESEARCHING', updated_at = ? WHERE id = ?").bind(id, now.toISOString(), run.slot_id).run();
+      }
       return;
     }
   } catch (error) {
     errors = [`JSON не разобран: ${error instanceof Error ? error.message : String(error)}`];
   }
-  if (run.rounds < MAX_ROUNDS) {
-    const next = await ai.create({
-      background: true,
-      previous_response_id: run.response_id,
-      input: [{ role: "user", content: repairPrompt(errors) }],
-      tools: TOOLS,
-      include: INCLUDE,
-    });
-    await update(db, run.id, { response_id: next.id, rounds: run.rounds + 1 }, now);
-    log.info("ai.repair", { run: run.id, errors: errors.length });
-    return;
-  }
+  if (await repair(db, ai, run, errors, now, true)) return;
   const list = errors.slice(0, 10).map((e) => `• ${escapeHtml(e)}`).join("\n");
   await fail(tg, db, run, "research-пакет не прошёл проверку", now, `\n${list}\n\nМожно запустить ещё раз или поправить JSON вручную.`);
   const text = outputText(res);
@@ -302,8 +368,12 @@ async function finishResearch(tg: Telegram, db: D1Database, ai: AiClient, run: R
 }
 
 /** One cron tick: poll running AI runs, start the next queued one. */
-export async function runAiTick(deps: { tg: Telegram; db: D1Database; ai: AiClient | null }, now: Date): Promise<void> {
+export async function runAiTick(
+  deps: { tg: Telegram; db: D1Database; ai: AiClient | null; admins?: Set<number>; timeZone?: string; handlers?: RunHandlers },
+  now: Date,
+): Promise<void> {
   const { tg, db, ai } = deps;
+  const handlers = deps.handlers ?? {};
   if (!ai) return;
   const running = await db.prepare("SELECT * FROM ai_runs WHERE status = 'RUNNING' ORDER BY id").all<RunRow>();
   for (const run of running.results) {
@@ -319,13 +389,14 @@ export async function runAiTick(deps: { tg: Telegram; db: D1Database; ai: AiClie
         output_tokens: run.output_tokens + (res.usage?.output_tokens ?? 0),
         web_searches: run.web_searches + webSearchCount(res),
       };
-      await update(db, run.id, { input_tokens: counted.input_tokens, output_tokens: counted.output_tokens, web_searches: counted.web_searches }, now);
+      await updateRun(db, run.id, { input_tokens: counted.input_tokens, output_tokens: counted.output_tokens, web_searches: counted.web_searches }, now);
       if (res.status !== "completed") {
         await fail(tg, db, counted, res.error?.message ?? res.incomplete_details?.reason ?? res.status, now);
         continue;
       }
       if (run.kind === "DISCOVER") await finishDiscovery(tg, db, counted, res, now);
-      else await finishResearch(tg, db, ai, counted, res, now);
+      else if (run.kind === "RESEARCH") await finishResearch(tg, db, ai, counted, res, now);
+      else await finishWithHandler(deps, handlers, counted, res, now);
     } catch (error) {
       log.error("ai.poll_failed", error, { run: run.id });
       if (now.getTime() - Date.parse(run.created_at) > MAX_RUN_MINUTES * 60_000) {
@@ -341,16 +412,49 @@ export async function runAiTick(deps: { tg: Telegram; db: D1Database; ai: AiClie
   const claimed = await db.prepare("UPDATE ai_runs SET status = 'RUNNING', updated_at = ? WHERE id = ? AND status = 'QUEUED'").bind(now.toISOString(), next.id).run();
   if (!claimed.meta.changes) return;
   try {
-    const exclude = (await db.prepare("SELECT title FROM research_items WHERE status != 'REJECTED' ORDER BY id DESC LIMIT 30").all<{ title: string }>()).results.map((r) => r.title);
+    const handler = handlers[next.kind];
+    let content: string;
+    let webSearch = true;
+    if (handler) {
+      content = await handler.prompt(db, next, JSON.parse(next.request) as RunRequest, now);
+      webSearch = handler.webSearch;
+    } else {
+      const exclude = (await db.prepare("SELECT title FROM research_items WHERE status != 'REJECTED' ORDER BY id DESC LIMIT 30").all<{ title: string }>()).results.map((r) => r.title);
+      content = firstPrompt(next, now, exclude);
+    }
     const res = await ai.create({
       background: true,
-      input: [{ role: "user", content: firstPrompt(next, now, exclude) }],
-      tools: TOOLS,
-      include: INCLUDE,
+      input: [{ role: "user", content }],
+      ...(webSearch ? { tools: TOOLS, include: INCLUDE } : {}),
       metadata: { run_id: String(next.id), kind: next.kind },
     });
-    await update(db, next.id, { response_id: res.id, rounds: 1 }, now);
+    await updateRun(db, next.id, { response_id: res.id, rounds: 1 }, now);
   } catch (error) {
     await fail(tg, db, next, error instanceof Error ? error.message : String(error), now);
   }
+}
+
+async function finishWithHandler(
+  deps: { tg: Telegram; db: D1Database; ai: AiClient | null; admins?: Set<number>; timeZone?: string },
+  handlers: RunHandlers,
+  run: RunRow,
+  res: AiResponse,
+  now: Date,
+): Promise<void> {
+  const handler = handlers[run.kind];
+  if (!handler) return fail(deps.tg, deps.db, run, `нет обработчика для ${run.kind}`, now);
+  let errors: string[] | void;
+  try {
+    errors = await handler.finish({ tg: deps.tg, db: deps.db, ai: deps.ai!, now, admins: deps.admins ?? new Set(), timeZone: deps.timeZone ?? "Asia/Tashkent" }, run, res);
+  } catch (error) {
+    errors = [`ответ не разобран: ${error instanceof Error ? error.message : String(error)}`];
+  }
+  if (!errors || !errors.length) {
+    // The handler marks the run DONE itself when it stores a result; make sure it does not stay RUNNING.
+    await deps.db.prepare("UPDATE ai_runs SET status = 'DONE', updated_at = ? WHERE id = ? AND status = 'RUNNING'").bind(now.toISOString(), run.id).run();
+    return;
+  }
+  if (await repair(deps.db, deps.ai!, run, errors, now, handler.webSearch)) return;
+  const list = errors.slice(0, 8).map((e) => `• ${escapeHtml(e)}`).join("\n");
+  await fail(deps.tg, deps.db, run, "ответ не прошёл проверку", now, `\n${list}`);
 }

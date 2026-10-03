@@ -72,15 +72,15 @@ export async function queueResearch(
   data: Researched,
   chatId: number,
   now: Date,
-  opts: { intro: string; aiCostUsd?: number; autoDate?: string },
+  opts: { intro: string; aiCostUsd?: number; autoDate?: string; slotId?: number },
 ): Promise<number> {
   const at = now.toISOString();
   const row = await db
     .prepare(
-      `INSERT INTO research_items (kind, title, status, research_date, data, calc, slug, ai_cost_usd, auto_date, created_at, updated_at)
-       VALUES (?1, ?2, 'DRAFT', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?9) RETURNING id`,
+      `INSERT INTO research_items (kind, title, status, research_date, data, calc, slug, ai_cost_usd, auto_date, slot_id, created_at, updated_at)
+       VALUES (?1, ?2, 'DRAFT', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?10) RETURNING id`,
     )
-    .bind(spec.researchKind, data.title, data.research_date, JSON.stringify(data), JSON.stringify(spec.calc(data)), data.slug, opts.aiCostUsd ?? 0, opts.autoDate ?? null, at)
+    .bind(spec.researchKind, data.title, data.research_date, JSON.stringify(data), JSON.stringify(spec.calc(data)), data.slug, opts.aiCostUsd ?? 0, opts.autoDate ?? null, opts.slotId ?? null, at)
     .first<{ id: number }>();
   await enqueueJob(db, RENDER_JOB, { researchId: row!.id, chatId }, at);
   if (!opts.autoDate) await sendMessage(tg, chatId, `${opts.intro}

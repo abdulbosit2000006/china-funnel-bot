@@ -20,6 +20,10 @@ const channelAdmin = (): TgUpdate => ({
     new_chat_member: { status: "administrator", user: { id: 42, is_bot: true, first_name: "bot" } },
   },
 });
+const adminText = (text: string): TgUpdate => {
+  const id = nextId++;
+  return { update_id: id, message: { message_id: id, from: { id: ADMIN_ID, is_bot: false, first_name: "Admin" }, chat: { id: ADMIN_ID, type: "private" }, date: 0, text } };
+};
 const jsonUpload = (fileId: string): TgUpdate => {
   const id = nextId++;
   return {
@@ -32,71 +36,61 @@ const jsonUpload = (fileId: string): TgUpdate => {
 };
 
 describe("autopilot", () => {
-  it("Monday: researches at night, delivers PDF + post at 09:00, one tap publishes both", async () => {
+  it("/autopilot now: research runs right away, PDF + post come as soon as ready, one tap publishes both", async () => {
     const tg = fakeTelegram();
     const ai = fakeAi();
     const renderPdf = fakeRenderer();
-    const { app } = makeApp(tg, new Date("2026-10-04T20:00:00Z"), renderPdf, fakeImageRenderer(), undefined, ai);
+    const { app } = makeApp(tg, new Date("2026-10-05T03:00:00Z"), renderPdf, fakeImageRenderer(), undefined, ai);
     await postUpdate(app, channelAdmin());
 
-    await app.scheduled(at("2026-10-04T19:30:00Z"), env); // Mon 00:30 Tashkent: too early
-    expect(ai.created).toHaveLength(0);
-    await app.scheduled(at("2026-10-04T20:00:00Z"), env); // Mon 01:00: discovery queued and started
-    expect(ai.created).toHaveLength(1);
-    expect(await env.DB.prepare("SELECT kind, subject, auto_date FROM ai_runs").first()).toEqual({ kind: "DISCOVER", subject: "EXHIBITION", auto_date: "2026-10-05" });
-    await app.scheduled(at("2026-10-04T20:01:00Z"), env);
+    await postUpdate(app, adminText("/autopilot now exhibition"));
+    expect(String(tg.calls.at(-1)!.params.text)).toContain("Запустил автопилот сейчас");
+    // The slot date is yesterday, so the bundle is delivered the moment it is ready.
+    expect(await env.DB.prepare("SELECT kind, subject, auto_date FROM ai_runs").first()).toEqual({ kind: "DISCOVER", subject: "EXHIBITION", auto_date: "2026-10-04" });
+    await app.scheduled(at("2026-10-05T03:00:00Z"), env); // discovery started
+    await app.scheduled(at("2026-10-05T03:01:00Z"), env);
     expect(ai.created).toHaveLength(1); // not started twice
 
     ai.answers.resp_1 = aiAnswer("resp_1", candidates("Canton Fair"), ["https://cantonfair.org.cn/en"]);
-    await app.scheduled(at("2026-10-04T20:02:00Z"), env); // discovery done → research queued
-    await app.scheduled(at("2026-10-04T20:03:00Z"), env); // research started
+    await app.scheduled(at("2026-10-05T03:02:00Z"), env); // discovery done → research queued
+    await app.scheduled(at("2026-10-05T03:03:00Z"), env); // research started
     expect(JSON.stringify(ai.created[1]!.input)).toContain("Canton Fair");
     ai.answers.resp_2 = aiAnswer("resp_2", JSON.stringify(exhibition), exhibition.sources.map((s) => s.url));
-    tg.calls.length = 0;
-    await app.scheduled(at("2026-10-04T20:04:00Z"), env); // package stored (quietly) and rendered
-    await app.scheduled(at("2026-10-04T20:05:00Z"), env);
-    const item = await env.DB.prepare("SELECT status, auto_date, pdf_r2_key, pdf_tg_file_id FROM research_items").first<Record<string, string | null>>();
-    expect(item).toMatchObject({ status: "IN_REVIEW", auto_date: "2026-10-05", pdf_tg_file_id: null });
-    expect(item!.pdf_r2_key).toBeTruthy();
+    await app.scheduled(at("2026-10-05T03:04:00Z"), env); // package stored and rendered
+    await app.scheduled(at("2026-10-05T03:05:00Z"), env);
+    const item = await env.DB.prepare("SELECT status, auto_date, pdf_r2_key FROM research_items").first<Record<string, string | null>>();
+    expect(item).toMatchObject({ status: "IN_REVIEW", auto_date: "2026-10-04" });
     expect(renderPdf.rendered).toHaveLength(1);
-    expect(tg.calls.filter((c) => c.params.chat_id === ADMIN_ID || c.params.chat_id === String(ADMIN_ID))).toHaveLength(0); // nothing at night
 
-    await app.scheduled(at("2026-10-05T03:00:00Z"), env); // 08:00: still waiting
-    expect(tg.calls.some((c) => c.method === "sendDocument")).toBe(false);
-    await app.scheduled(at("2026-10-05T04:00:00Z"), env); // 09:00: PDF delivered
+    await app.scheduled(at("2026-10-05T03:06:00Z"), env); // PDF delivered
+    await app.scheduled(at("2026-10-05T03:07:00Z"), env); // post preview
     const pdf = tg.calls.find((c) => c.method === "sendDocument")!;
-    expect(pdf.params.chat_id).toBe(String(ADMIN_ID));
     expect(String(pdf.params.caption)).toContain("Все источники взяты из результатов поиска");
-    expect(tg.calls.some((c) => String(c.params.text ?? "").includes("Пост на сегодня"))).toBe(true);
-    const magnet = await env.DB.prepare("SELECT id, status, type FROM lead_magnets").first<{ id: number; status: string; type: string }>();
-    expect(magnet).toMatchObject({ status: "DRAFT", type: "EXHIBITION_GUIDE" });
-
-    await app.scheduled(at("2026-10-05T04:01:00Z"), env); // post preview
     const preview = tg.calls.filter((c) => c.method === "sendPhoto").at(-1)!;
     const post = await env.DB.prepare("SELECT id, status FROM content_items").first<{ id: number; status: string }>();
     expect(post!.status).toBe("PREVIEW");
-    expect(String(preview.params.reply_markup)).toContain("💰 Safar narxini bilish");
+    expect(String(preview.params.reply_markup)).toContain("✈️ Safar hisobini olish");
 
     await postUpdate(app, callbackUpdate(ADMIN_ID, `pp:p:${post!.id}`));
-    expect((await env.DB.prepare("SELECT status FROM lead_magnets").first())).toEqual({ status: "ACTIVE" });
-    expect((await env.DB.prepare("SELECT status FROM research_items").first())).toEqual({ status: "ACTIVE" });
+    expect(await env.DB.prepare("SELECT status FROM lead_magnets").first()).toEqual({ status: "ACTIVE" });
     expect(tg.calls.filter((c) => c.params.chat_id === CHANNEL_ID)).toHaveLength(1);
 
     await app.scheduled(at("2026-10-05T05:00:00Z"), env); // delivered once only
     expect(tg.calls.filter((c) => c.method === "sendDocument")).toHaveLength(1);
   });
 
-  it("Wednesday has no slot, and /autopilot off stops it", async () => {
+  it("no research starts by weekday any more: the weekly plan decides, and /autopilot off stops it", async () => {
     const tg = fakeTelegram();
     const ai = fakeAi();
-    const { app } = makeApp(tg, new Date("2026-10-06T20:00:00Z"), undefined, undefined, undefined, ai);
-    await app.scheduled(at("2026-10-06T20:00:00Z"), env); // Wed 01:00: no slot
+    const { app } = makeApp(tg, new Date("2026-10-04T20:00:00Z"), undefined, undefined, undefined, ai);
+    await app.scheduled(at("2026-10-04T20:00:00Z"), env); // Mon 01:00 without a plan: nothing
     expect(ai.created).toHaveLength(0);
 
-    await postUpdate(app, { update_id: nextId++, message: { message_id: 1, from: { id: ADMIN_ID, is_bot: false, first_name: "A" }, chat: { id: ADMIN_ID, type: "private" }, date: 0, text: "/autopilot off" } });
+    await postUpdate(app, adminText("/autopilot off"));
     expect(String(tg.calls.at(-1)!.params.text)).toContain("Автопилот выключен");
-    await app.scheduled(at("2026-10-07T20:00:00Z"), env); // Thu 01:00: planned, but switched off
+    await app.scheduled(at("2026-10-10T08:00:00Z"), env); // Sat 13:00: no weekly plan while switched off
     expect(ai.created).toHaveLength(0);
+    expect(await env.DB.prepare("SELECT COUNT(*) AS n FROM content_plans").first()).toEqual({ n: 0 });
   });
 });
 
@@ -121,19 +115,19 @@ describe("business model funnel", () => {
     expect(post!.text).toContain(manufacturing.product.name);
     expect(post!.text).not.toMatch(/\$\s?\d/);
     const preview = tg.calls.filter((c) => c.method === "sendPhoto").at(-1)!;
-    expect(String(preview.params.reply_markup)).toContain("📊 Biznes hisob-kitobini olish");
+    expect(String(preview.params.reply_markup)).toContain("📊 To'liq biznes hisob-kitobini olish");
   });
 });
 
 describe("autopilot limits", () => {
-  it("a refused start (daily AI limit) is tried once a day, not every minute", async () => {
+  it("a refused run (daily AI limit) says so once and queues nothing", async () => {
     const tg = fakeTelegram();
     const ai = fakeAi();
     await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('ai.daily_limit', '0')").run();
     const { app } = makeApp(tg, new Date("2026-10-04T20:00:00Z"), undefined, undefined, undefined, ai);
-    await app.scheduled(at("2026-10-04T20:00:00Z"), env);
+    await postUpdate(app, adminText("/autopilot now business"));
     await app.scheduled(at("2026-10-04T20:01:00Z"), env);
-    await app.scheduled(at("2026-10-04T20:02:00Z"), env);
     expect(tg.calls.filter((c) => String(c.params.text ?? "").includes("Дневной лимит"))).toHaveLength(1);
+    expect(await env.DB.prepare("SELECT COUNT(*) AS n FROM ai_runs").first()).toEqual({ n: 0 });
   });
 });

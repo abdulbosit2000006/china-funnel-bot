@@ -64,7 +64,7 @@ describe("channel post", () => {
     // The price is only in the bot: the post asks the question and sends people there.
     expect(post.text).not.toMatch(/\$\s?\d/);
     expect(post.text).toContain("Bu safar 2 kishiga qancha turadi?");
-    expect(post.text).toContain("safar narxini bilib oling");
+    expect(post.text).toContain("safar hisobini oling");
     expect(post.text).not.toContain("Ro'yxatdan o'tish:"); // the deadline is UNKNOWN in the fixture
     expect(visibleLength(post.text)).toBeLessThanOrEqual(1024);
 
@@ -80,7 +80,7 @@ describe("channel post", () => {
     const preview = tg.calls.filter((c) => c.method === "sendPhoto").at(-1)!;
     expect(preview.params.caption).toBe(post.text);
     const rows = (JSON.parse(String(preview.params.reply_markup)) as { inline_keyboard: { text: string; url?: string; callback_data?: string }[][] }).inline_keyboard;
-    expect(rows[0]![0]).toEqual({ text: "💰 Safar narxini bilish", url: `https://t.me/test_bot?start=${funnel!.code}` });
+    expect(rows[0]![0]).toEqual({ text: "✈️ Safar hisobini olish", url: `https://t.me/test_bot?start=${funnel!.code}` });
     expect(rows[1]!.map((b) => b.callback_data)).toEqual([`pp:p:${post.id}`, `pp:e:${post.id}`]);
     expect(rows[2]!.map((b) => b.callback_data)).toEqual([`pp:i:${post.id}`, `pp:x:${post.id}`]);
   });
@@ -227,7 +227,7 @@ describe("channel post", () => {
     const text = buildPostText({ title: "x" } as never, long as never);
     expect(visibleLength(text)).toBeLessThanOrEqual(1024);
     expect(text).not.toMatch(/\$\s?\d/);
-    expect(text).toContain("safar narxini bilib oling");
+    expect(text).toContain("safar hisobini oling");
   });
 
   it("losing admin rights in the channel disconnects it", async () => {

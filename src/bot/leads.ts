@@ -315,6 +315,12 @@ export async function handleFollowupAnswer(ctx: LeadContext, callback: { id: str
   }
 }
 
+/** A text post's campaign link (no PDF behind it): the reader came to ask something. */
+export async function startQuestionFromPost(ctx: LeadContext, chatId: number, user: UserRow, funnelId: number): Promise<void> {
+  await ctx.db.prepare("UPDATE users SET state = ?, state_data = ? WHERE id = ?").bind(QUESTION_STATE, JSON.stringify({ funnelId }), user.id).run();
+  await sendMessage(ctx.tg, chatId, await template(ctx.db, "questionStart"));
+}
+
 /** A client's free text while we wait for their question: forward it to the founder. Returns true when consumed. */
 export async function handleClientText(ctx: LeadContext, chatId: number, user: UserRow, text: string): Promise<boolean> {
   const row = await ctx.db.prepare("SELECT state, state_data FROM users WHERE id = ?").bind(user.id).first<{ state: string | null; state_data: string | null }>();
@@ -322,7 +328,7 @@ export async function handleClientText(ctx: LeadContext, chatId: number, user: U
   await ctx.db.prepare("UPDATE users SET state = NULL, state_data = NULL WHERE id = ?").bind(user.id).run();
   const data = JSON.parse(row.state_data ?? "{}") as { magnetId?: number; funnelId?: number | null };
   const magnet = data.magnetId ? await getLeadMagnet(ctx.db, data.magnetId) : null;
-  await recordFunnelEvent(ctx.db, { userId: user.id, type: "FOLLOWUP_REPLY", funnelId: data.funnelId ?? null, leadMagnetId: magnet?.id ?? null, payload: { answer: "question" } }, ctx.now.toISOString());
+  await recordFunnelEvent(ctx.db, { userId: user.id, type: "FOLLOWUP_REPLY", funnelId: data.funnelId ?? null, leadMagnetId: magnet?.id ?? null, payload: { answer: "question", text: text.slice(0, 500) } }, ctx.now.toISOString());
   await advanceStage(ctx.db, user.id, "ENGAGED", ctx.now.toISOString());
   await notifyAdmins(
     ctx,

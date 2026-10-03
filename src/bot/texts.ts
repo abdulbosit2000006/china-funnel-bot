@@ -26,6 +26,9 @@ export const clientTexts = {
   followupNo: "⏸ Hozir emas",
   followupNoReply: "Tushunarli! Kanalimizda yangi foydali materiallar chiqib turadi. Kerak bo'lsa, shu yerga yozing.",
   questionAsk: "Savolingizni shu yerga bitta xabarda yozing, mutaxassisga yetkazaman.",
+  questionStart:
+    "Assalomu alaykum! 👋\n\nPost bo'yicha savolingizni shu yerga bitta xabarda yozing: mahsulot, uskuna, Xitoy bilan ishlash. " +
+    "Mutaxassis o'zi javob beradi.",
   questionThanks: "Rahmat! Savolingiz mutaxassisga yuborildi, tez orada javob beramiz.",
   qualIntro: "Ajoyib! Sizga aniq yordam berishimiz uchun bir nechta qisqa savol (tugmani bosish kifoya):",
   qualDone: "Rahmat! Ma'lumotlar mutaxassisga yuborildi. Tez orada siz bilan bog'lanamiz. 🤝",

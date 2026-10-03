@@ -52,7 +52,7 @@ export function buildPostText(magnet: LeadMagnetRow, research: ExhibitionResearc
       `💰 <b>Bu safar 2 kishiga qancha turadi?</b>\n` +
         `Aviachipta, mehmonxona, transport va boshqa xarajatlar: tayyor hisob-kitob, safar dasturi va tayyorgarlik ro'yxati botda.`,
     );
-    parts.push(`👇 <b>Pastdagi tugmani bosing va safar narxini bilib oling!</b>`);
+    parts.push(`👇 <b>Pastdagi tugmani bosing va safar hisobini oling!</b>`);
     return parts.join("\n\n");
   };
   const attempts = [
@@ -71,8 +71,9 @@ export function buildPostText(magnet: LeadMagnetRow, research: ExhibitionResearc
  * Business idea post: hook, what is produced, the concrete line, verified figures, why it is interesting, and the
  * question about investment and payback. The numbers themselves are in the PDF in the bot.
  */
-export function manufacturingCaption(data: ManufacturingResearch): string {
-  const hook = "<b>📣 Tadbirkorlar diqqatiga!</b>";
+export function manufacturingCaption(data: ManufacturingResearch, seriesNo?: number | null): string {
+  // Monday series header (Content Strategy V1); the number is confirmed again when the post is published.
+  const hook = seriesNo ? `<b>🏭 1 STANOK — 1 BIZNES #${String(seriesNo).padStart(2, "0")}</b>` : "<b>📣 Tadbirkorlar diqqatiga!</b>";
   const build = (o: { tagline: boolean; stats: number; why: number }) => {
     const parts = [hook];
     parts.push(`🏭 <b>${escapeHtml(data.product.name)}</b>${o.tagline && data.product.tagline ? ` — ${escapeHtml(data.product.tagline)}` : ""}`);
@@ -87,7 +88,7 @@ export function manufacturingCaption(data: ManufacturingResearch): string {
       `💰 <b>Qancha investitsiya kerak va qachon o'zini oqlaydi?</b>\n` +
         `Uskuna, xomashyo, xarajatlar, tannarx, foyda va o'zini oqlash muddati: to'liq hisob-kitob botda.`,
     );
-    parts.push(`👇 <b>Pastdagi tugmani bosing va biznes hisob-kitobini oling!</b>`);
+    parts.push(`👇 <b>Pastdagi tugmani bosing va to'liq biznes hisob-kitobini oling!</b>`);
     return parts.join("\n\n");
   };
   return fitCaption(

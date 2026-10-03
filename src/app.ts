@@ -1,7 +1,9 @@
 import { runAiTick } from "./bot/ai";
 import { AUTOPILOT_JOB, runAutopilot, runAutopilotDelivery } from "./bot/autopilot";
 import { runFollowups } from "./bot/leads";
-import { runDailyReport } from "./bot/stats";
+import { runDailyReport, runMonthlyReport } from "./bot/stats";
+import { CONTENT_HANDLERS } from "./bot/content";
+import { runContentPlanner } from "./bot/plan";
 import { POST_CARD_JOB, postPreviewWithoutPhoto, runPostCardJob } from "./bot/posts";
 import { createOpenAI, type AiClient } from "./ai/openai";
 import { RENDER_JOB, runRenderJob } from "./bot/research";
@@ -30,7 +32,7 @@ export interface AppDeps {
 
 export const DEFAULT_AI_MODEL = "gpt-6.1-sol";
 const defaultAi = (env: Env): AiClient | null =>
-  env.OPENAI_API_KEY ? createOpenAI(env.OPENAI_API_KEY, env.OPENAI_MODEL || DEFAULT_AI_MODEL) : null;
+  env.OPENAI_API_KEY ? createOpenAI(env.OPENAI_API_KEY, env.OPENAI_MODEL || DEFAULT_AI_MODEL, fetch, env.OPENAI_TRANSCRIBE_MODEL || undefined) : null;
 
 const defaultDeps: AppDeps = {
   telegram: (env) => createTelegram(env.TELEGRAM_BOT_TOKEN),
@@ -113,6 +115,15 @@ export function createApp(deps: AppDeps = defaultDeps) {
           { command: "research", description: "AI: research по выставке" },
           { command: "ideas", description: "AI: найти бизнес-идеи (можно с темой)" },
           { command: "business", description: "AI: бизнес-модель по названию" },
+          { command: "week", description: "План этой недели" },
+          { command: "plan", description: "План следующей недели" },
+          { command: "case", description: "Новый кейс (текст, голосовые, фото)" },
+          { command: "cases", description: "База кейсов" },
+          { command: "breaking", description: "Срочный пост по новости" },
+          { command: "expo", description: "Мои выставки" },
+          { command: "season", description: "Сезон выставок: on/off" },
+          { command: "views", description: "Внести просмотры постов" },
+          { command: "budget", description: "Расход и лимит OpenAI" },
           { command: "autopilot", description: "Автопилот: статус и запуск" },
         ],
       });
@@ -172,8 +183,10 @@ export function createApp(deps: AppDeps = defaultDeps) {
       await runFollowups({ db: env.DB, tg: deps.telegram(env), now }).catch((e) => log.error("followups.failed", e));
       await runDailyReport({ db: env.DB, tg: deps.telegram(env), admins, now, timeZone })
         .catch((e) => log.error("report.failed", e));
+      await runMonthlyReport({ db: env.DB, tg: deps.telegram(env), admins, now, timeZone }).catch((e) => log.error("report.monthly_failed", e));
+      await runContentPlanner({ db: env.DB, tg: deps.telegram(env), ai, admins, now, timeZone }).catch((e) => log.error("planner.failed", e));
       await runAutopilot({ db: env.DB, tg: deps.telegram(env), ai, admins, now, timeZone }).catch((e) => log.error("autopilot.failed", e));
-      await runAiTick({ tg: deps.telegram(env), db: env.DB, ai }, now).catch((e) => log.error("ai.tick_failed", e));
+      await runAiTick({ tg: deps.telegram(env), db: env.DB, ai, admins, timeZone, handlers: CONTENT_HANDLERS }, now).catch((e) => log.error("ai.tick_failed", e));
       await runJobs(env, now);
       if (now.getUTCMinutes() === 0) {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();

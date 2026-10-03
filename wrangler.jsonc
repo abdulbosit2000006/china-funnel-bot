@@ -22,7 +22,8 @@
   "vars": {
     "TIMEZONE": "Asia/Tashkent",
     // AI research model (OpenAI Responses API with web search).
-    "OPENAI_MODEL": "gpt-6.1-sol"
+    "OPENAI_MODEL": "gpt-6.1-sol",
+    "OPENAI_TRANSCRIBE_MODEL": "gpt-4o-mini-transcribe"
   }
   // Secrets (never in git): TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, ADMIN_API_TOKEN, ADMIN_TG_IDS, OPENAI_API_KEY
 }

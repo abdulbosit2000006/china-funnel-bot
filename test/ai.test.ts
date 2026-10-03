@@ -1,3 +1,4 @@
+// Ticks run Saturday morning (10:xx Tashkent), before the 12:00 weekly plan, so only the runs under test reach the AI.
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import { normalizeUrl, wasSeen } from "../src/ai/openai";
@@ -5,12 +6,12 @@ import fixture from "./fixtures/exhibition-research.json";
 import { ADMIN_ID, CLIENT_ID, aiAnswer, callbackUpdate, fakeAi, fakeTelegram, makeApp, messageUpdate, postUpdate } from "./helpers";
 
 const tick = (app: ReturnType<typeof makeApp>["app"], minute: number) =>
-  app.scheduled({ scheduledTime: Date.parse(`2026-10-03T13:${String(minute).padStart(2, "0")}:00Z`) }, env);
+  app.scheduled({ scheduledTime: Date.parse(`2026-10-03T05:${String(minute).padStart(2, "0")}:00Z`) }, env);
 
 function setup() {
   const tg = fakeTelegram();
   const ai = fakeAi();
-  const { app } = makeApp(tg, new Date("2026-10-03T13:00:00Z"), undefined, undefined, undefined, ai);
+  const { app } = makeApp(tg, new Date("2026-10-03T05:00:00Z"), undefined, undefined, undefined, ai);
   return { tg, ai, app };
 }
 
