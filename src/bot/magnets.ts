@@ -99,7 +99,7 @@ export async function handleAdminUpload(
   await sendMessage(tg, chatId, `✅ Загружено.\n\n${view.text}`, view.keyboard);
 }
 
-async function renderMagnet(
+export async function renderMagnet(
   tg: Telegram,
   db: D1Database,
   magnet: LeadMagnetRow,
