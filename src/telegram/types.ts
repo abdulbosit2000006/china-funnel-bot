@@ -1,0 +1,49 @@
+// The subset of the Telegram Bot API types this bot reads.
+export interface TgUser {
+  id: number;
+  is_bot: boolean;
+  first_name: string;
+  username?: string;
+  language_code?: string;
+}
+
+export interface TgChat {
+  id: number;
+  type: "private" | "group" | "supergroup" | "channel";
+}
+
+export interface TgMessage {
+  message_id: number;
+  from?: TgUser;
+  chat: TgChat;
+  date: number;
+  text?: string;
+}
+
+export interface TgCallbackQuery {
+  id: string;
+  from: TgUser;
+  message?: TgMessage;
+  data?: string;
+}
+
+export interface TgChatMemberUpdated {
+  chat: TgChat;
+  from: TgUser;
+  new_chat_member: { status: string; user: TgUser };
+}
+
+export interface TgUpdate {
+  update_id: number;
+  message?: TgMessage;
+  callback_query?: TgCallbackQuery;
+  my_chat_member?: TgChatMemberUpdated;
+}
+
+export interface InlineButton {
+  text: string;
+  callback_data?: string;
+  url?: string;
+}
+
+export type InlineKeyboard = InlineButton[][];

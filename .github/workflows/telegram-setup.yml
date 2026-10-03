@@ -1,0 +1,22 @@
+name: Register Telegram webhook
+
+# Run by hand (Actions → Register Telegram webhook → Run workflow) after the first deploy
+# and whenever the bot token or webhook secret changes.
+on:
+  workflow_dispatch:
+    inputs:
+      worker_url:
+        description: "Worker URL, e.g. https://china-funnel-bot.<your-subdomain>.workers.dev"
+        required: true
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /admin/setup
+        env:
+          ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+          WORKER_URL: ${{ inputs.worker_url }}
+        run: |
+          curl --fail-with-body -sS -X POST "${WORKER_URL%/}/admin/setup" \
+            -H "Authorization: Bearer ${ADMIN_API_TOKEN}"

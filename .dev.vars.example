@@ -1,0 +1,5 @@
+# Local development only (wrangler dev). Copy to .dev.vars, never commit .dev.vars.
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=
+ADMIN_API_TOKEN=
+ADMIN_TG_IDS=

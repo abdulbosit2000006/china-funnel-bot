@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "china-funnel-bot",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  // Every minute: follow-ups (Phase 3) and housekeeping.
+  "triggers": { "crons": ["* * * * *"] },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "china-funnel-bot-db",
+      // Filled in once the database exists in Cloudflare (docs/setup-cloudflare.md, step 3).
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "TIMEZONE": "Asia/Tashkent"
+  }
+  // Secrets (never in git): TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, ADMIN_API_TOKEN, ADMIN_TG_IDS
+}
