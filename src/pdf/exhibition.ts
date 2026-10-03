@@ -49,6 +49,8 @@ export interface ExhibitionResearch {
     tagline?: string; // one line: what this exhibition is
     stats?: { year: string; source: number | null; items: { label: string; value: string }[] };
     deadline?: Labeled; // registration / application deadline
+    /** Official poster or banner (JPEG/PNG) from the organizer; used as the post photo instead of our generated cover. */
+    poster_url?: string;
   };
   scenario: {
     people: number;
@@ -160,6 +162,7 @@ export function validateResearch(raw: unknown): { ok: true; data: ExhibitionRese
     need(Array.isArray(e.phases) && e.phases.length > 0, "exhibition.phases: нужен хотя бы один этап");
     need(Array.isArray(e.relevance) && e.relevance.length > 0, "exhibition.relevance: нужен хотя бы один пункт");
     if (e.deadline !== undefined) checkLabeled(e.deadline, "exhibition.deadline");
+    if (e.poster_url !== undefined) need(typeof e.poster_url === "string" && /^https:\/\//.test(e.poster_url), "exhibition.poster_url: ссылка https на картинку");
     if (e.stats !== undefined) {
       const st = e.stats as unknown;
       if (!isObj(st) || !str(st.year) || !Array.isArray(st.items)) errors.push("exhibition.stats: {year, source, items: [{label, value}]}");

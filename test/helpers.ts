@@ -65,8 +65,9 @@ export function makeApp(
   now = new Date("2026-10-03T12:00:00Z"),
   renderPdf = fakeRenderer(),
   renderImage: ImageRenderer = fakeImageRenderer(),
+  fetchUrl: typeof fetch = async () => new Response("no network in tests", { status: 503 }),
 ) {
-  return { app: createApp({ telegram: () => tg, renderPdf: () => renderPdf, renderImage: () => renderImage, now: () => now }), tg, renderPdf };
+  return { app: createApp({ telegram: () => tg, renderPdf: () => renderPdf, renderImage: () => renderImage, now: () => now, fetchUrl }), tg, renderPdf };
 }
 
 let nextUpdateId = 1;

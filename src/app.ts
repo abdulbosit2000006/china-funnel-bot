@@ -17,6 +17,8 @@ export interface AppDeps {
   renderPdf: (env: Env) => PdfRenderer;
   renderImage: (env: Env) => ImageRenderer;
   now: () => Date;
+  /** Outbound HTTP for official posters; tests replace it. */
+  fetchUrl?: typeof fetch;
 }
 
 const defaultDeps: AppDeps = {
@@ -113,7 +115,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
       if (job.kind === RENDER_JOB) {
         await runRenderJob({ tg, db: env.DB, files: env.FILES, renderPdf: deps.renderPdf(env), now }, payload);
       } else if (job.kind === POST_CARD_JOB) {
-        await runPostCardJob({ tg, db: env.DB, files: env.FILES, renderImage: deps.renderImage(env) }, payload);
+        await runPostCardJob({ tg, db: env.DB, files: env.FILES, renderImage: deps.renderImage(env), fetchUrl: deps.fetchUrl ?? fetch }, payload);
       }
       await finishJob(env.DB, job.id);
       log.info("job.done", { id: job.id, kind: job.kind, attempts: job.attempts });

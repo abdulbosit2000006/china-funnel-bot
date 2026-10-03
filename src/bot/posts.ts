@@ -1,18 +1,23 @@
 import { createFunnelForSlug, getLeadMagnet, getSetting, logAdminAction, putSetting, type FunnelRow, type LeadMagnetRow } from "../db";
 import { enqueueJob } from "../jobs";
 import { BRAND_MARK, BRAND_NAME } from "../pdf/content";
-import { calculateBudget, money, type ExhibitionResearch } from "../pdf/exhibition";
+import type { ExhibitionResearch } from "../pdf/exhibition";
+import { log } from "../log";
 import { CARD_HEIGHT, CARD_WIDTH, renderPostCardHtml } from "../pdf/post-card";
 import type { ImageRenderer } from "../pdf/render";
 import { fmtDate } from "../pdf/template";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
-import type { InlineKeyboard, TgChatMemberUpdated } from "../telegram/types";
+import type { InlineKeyboard, TgChatMemberUpdated, TgPhotoSize } from "../telegram/types";
 import { botUsername } from "./magnets";
 
 export const POST_CALLBACK_PREFIX = "pp:";
 export const CHANNEL_SETTING = "channel";
 const EDIT_SETTING = (adminId: number) => `await.post_edit.${adminId}`;
-const CTA_BUTTON = "✈️ Tayyor hisob-kitobni olish";
+const PHOTO_SETTING = (adminId: number) => `await.post_photo.${adminId}`;
+/** Telegram accepts photos up to 10 MB. */
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+// The price is the reason to open the bot, so the post never shows it (Abdul, 2026-10-03).
+const CTA_BUTTON = "💰 Safar narxini bilish";
 /** Telegram limit for a photo caption (visible characters). */
 export const MAX_CAPTION = 1024;
 export const POST_CARD_JOB = "RENDER_POST_CARD";
@@ -35,6 +40,8 @@ interface ContentRow {
 interface PostMedia {
   photo_file_id: string;
   r2_key: string;
+  /** "poster": official image from the organizer, "card": our generated cover, "admin": a photo the admin sent. */
+  source?: "poster" | "card" | "admin";
 }
 
 /** Length as Telegram counts it: tags removed, entities decoded. */
@@ -44,21 +51,17 @@ export function visibleLength(html: string): number {
 
 /**
  * Lead-generation caption in the style that works in Uzbek business channels: bold hook, what/when/where,
- * organizer figures, why go, deadline, budget teaser, strong CTA. Sections are dropped from the end of the
+ * organizer figures, why go, deadline, a question about the trip cost and a CTA. The price itself is only in the bot. Sections are dropped from the end of the
  * priority list until it fits the 1024-character caption limit.
  */
 export function buildPostText(magnet: LeadMagnetRow, research: ExhibitionResearch | null): string {
   const hook = "<b>📣 Tadbirkorlar diqqatiga!</b>";
   if (!research) {
-    return `${hook}\n\n📄 <b>${escapeHtml(magnet.title)}</b>\n\nYangi material tayyor.\n\n👇 <b>PDF'ni botda oling: pastdagi tugmani bosing!</b>`;
+    return `${hook}\n\n📄 <b>${escapeHtml(magnet.title)}</b>\n\nYangi material tayyor.\n\n👇 <b>Pastdagi tugmani bosing va materialni botda oling!</b>`;
   }
   const e = research.exhibition;
-  const budget = calculateBudget(research);
   const phase = e.phases.find((p) => p.name === e.focus_phase) ?? e.phases[0]!;
   const name = `${e.name}${e.edition ? ` ${e.edition}` : ""}`;
-  const excluded = budget.excluded.length
-    ? ` (${budget.excluded.map((r) => escapeHtml(r.title.toLowerCase())).join(", ")} bundan tashqari)`
-    : "";
 
   const build = (o: { tagline: boolean; stats: number; why: number; phase: boolean }) => {
     const parts = [hook];
@@ -74,10 +77,10 @@ export function buildPostText(magnet: LeadMagnetRow, research: ExhibitionResearc
     if (o.phase) parts.push(`🏷 <b>${escapeHtml(phase.name)}:</b> ${escapeHtml(phase.categories)}`);
     if (e.deadline && e.deadline.label !== "UNKNOWN") parts.push(`📌 <b>Ro'yxatdan o'tish:</b> ${escapeHtml(e.deadline.value)}`);
     parts.push(
-      `💰 <b>2 kishi uchun safar byudjeti: ~${money(budget.total)}</b>\n` +
-        `Aviachipta, mehmonxona, ovqat va transport hisoblangan${excluded}. Narxlar ${fmtDate(research.research_date)} holatiga ko'ra.`,
+      `💰 <b>Bu safar 2 kishiga qancha turadi?</b>\n` +
+        `Aviachipta, mehmonxona, transport va boshqa xarajatlar: tayyor hisob-kitob, safar dasturi va tayyorgarlik ro'yxati botda.`,
     );
-    parts.push(`👇 <b>Tayyor hisob-kitobni PDF'da oling: pastdagi tugmani bosing!</b>`);
+    parts.push(`👇 <b>Pastdagi tugmani bosing va safar narxini bilib oling!</b>`);
     return parts.join("\n\n");
   };
   const attempts = [
@@ -132,9 +135,35 @@ export async function createPostDraft(
   await sendMessage(tg, chatId, "🎨 Готовлю пост с обложкой, превью придёт через 1–2 минуты.");
 }
 
-/** Cron job: render the cover, keep it in R2, send the admin the preview photo with the caption. */
+const POSTER_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png" };
+
+/** Downloads the organizer's official poster. Returns null (and logs why) when it is not a usable photo. */
+async function fetchPoster(fetchUrl: typeof fetch, url: string): Promise<{ bytes: Uint8Array; type: string; ext: string } | null> {
+  try {
+    const res = await fetchUrl(url, { signal: AbortSignal.timeout(15_000), headers: { accept: "image/jpeg,image/png" } });
+    const type = (res.headers.get("content-type") ?? "").split(";")[0]!.trim().toLowerCase();
+    if (!res.ok || !POSTER_TYPES[type]) {
+      log.info("post.poster_skipped", { url, status: res.status, type });
+      return null;
+    }
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (bytes.byteLength === 0 || bytes.byteLength > MAX_PHOTO_BYTES) {
+      log.info("post.poster_skipped", { url, bytes: bytes.byteLength });
+      return null;
+    }
+    return { bytes, type, ext: POSTER_TYPES[type]! };
+  } catch (error) {
+    log.error("post.poster_failed", error, { url });
+    return null;
+  }
+}
+
+/**
+ * Cron job: the post photo is the organizer's official poster when research gives one, otherwise our generated cover.
+ * The image is kept in R2 and the admin gets the preview photo with the caption.
+ */
 export async function runPostCardJob(
-  deps: { tg: Telegram; db: D1Database; files: R2Bucket; renderImage: ImageRenderer },
+  deps: { tg: Telegram; db: D1Database; files: R2Bucket; renderImage: ImageRenderer; fetchUrl: typeof fetch },
   payload: { contentId: number; chatId: number },
 ): Promise<void> {
   const { tg, db, files } = deps;
@@ -142,24 +171,28 @@ export async function runPostCardJob(
   if (!item || item.status !== "DRAFT") return;
   const magnet = (await getLeadMagnet(db, item.lead_magnet_id))!;
   const research = await loadResearch(db, magnet);
-  const brand = { name: BRAND_NAME, mark: BRAND_MARK, botUsername: await botUsername(tg, db) };
-  const png = await deps.renderImage(
-    renderPostCardHtml(brand, magnet.title, research, research ? calculateBudget(research) : null),
-    CARD_WIDTH,
-    CARD_HEIGHT,
-  );
-  const r2Key = `posts/${item.id}.png`;
-  await files.put(r2Key, png, { httpMetadata: { contentType: "image/png" } });
+  const posterUrl = research?.exhibition.poster_url;
+  const poster = posterUrl ? await fetchPoster(deps.fetchUrl, posterUrl) : null;
+  let image: { bytes: Uint8Array; type: string; ext: string; source: PostMedia["source"] };
+  if (poster) image = { ...poster, source: "poster" };
+  else {
+    const brand = { name: BRAND_NAME, mark: BRAND_MARK, botUsername: await botUsername(tg, db) };
+    const png = await deps.renderImage(renderPostCardHtml(brand, magnet.title, research), CARD_WIDTH, CARD_HEIGHT);
+    image = { bytes: png, type: "image/png", ext: "png", source: "card" };
+  }
+  const r2Key = `posts/${item.id}.${image.ext}`;
+  await files.put(r2Key, image.bytes, { httpMetadata: { contentType: image.type } });
 
   await sendPreviewHeader(tg, db, payload.chatId);
+  if (posterUrl && !poster) await sendMessage(tg, payload.chatId, "ℹ️ Официальный постер скачать не удалось, поставил нашу обложку. Можно заменить фото кнопкой «🖼 Заменить фото».");
   const form = new FormData();
   form.set("chat_id", String(payload.chatId));
-  form.set("photo", new Blob([png], { type: "image/png" }), `post-${item.id}.png`);
+  form.set("photo", new Blob([image.bytes], { type: image.type }), `post-${item.id}.${image.ext}`);
   form.set("caption", item.text);
   form.set("parse_mode", "HTML");
   form.set("reply_markup", JSON.stringify({ inline_keyboard: await previewKeyboard(tg, db, item) }));
   const sent = await tg.upload<{ photo?: { file_id: string }[] }>("sendPhoto", form);
-  const media: PostMedia = { photo_file_id: sent.photo?.at(-1)?.file_id ?? "", r2_key: r2Key };
+  const media: PostMedia = { photo_file_id: sent.photo?.at(-1)?.file_id ?? "", r2_key: r2Key, source: image.source };
   await db
     .prepare("UPDATE content_items SET status = 'PREVIEW', media = ? WHERE id = ?")
     .bind(JSON.stringify(media), item.id)
@@ -190,7 +223,10 @@ async function previewKeyboard(tg: Telegram, db: D1Database, item: ContentRow): 
       { text: "✅ Опубликовать", callback_data: `${POST_CALLBACK_PREFIX}p:${item.id}` },
       { text: "✏️ Изменить текст", callback_data: `${POST_CALLBACK_PREFIX}e:${item.id}` },
     ],
-    [{ text: "❌ Не публиковать", callback_data: `${POST_CALLBACK_PREFIX}x:${item.id}` }],
+    [
+      { text: "🖼 Заменить фото", callback_data: `${POST_CALLBACK_PREFIX}i:${item.id}` },
+      { text: "❌ Не публиковать", callback_data: `${POST_CALLBACK_PREFIX}x:${item.id}` },
+    ],
   ];
 }
 
@@ -239,7 +275,19 @@ export async function handlePostCallback(
   const item = await getContent(db, Number(rawId));
   if (!item || item.status !== "PREVIEW") return void (await answer("Уже обработано."));
 
+  if (action === "i") {
+    await db.prepare("DELETE FROM settings WHERE key = ?").bind(EDIT_SETTING(callback.fromId)).run();
+    await putSetting(db, PHOTO_SETTING(callback.fromId), item.id);
+    await answer();
+    await sendMessage(
+      tg,
+      callback.chatId,
+      "🖼 Пришлите картинку для поста как <b>фото</b> (не файлом), например официальный постер выставки. Текст и кнопка останутся те же.",
+    );
+    return;
+  }
   if (action === "e") {
+    await db.prepare("DELETE FROM settings WHERE key = ?").bind(PHOTO_SETTING(callback.fromId)).run();
     await putSetting(db, EDIT_SETTING(callback.fromId), item.id);
     await answer();
     await sendMessage(
@@ -309,6 +357,30 @@ export async function handlePostEditText(tg: Telegram, db: D1Database, adminId: 
   const newText = escapeHtml(text.trim());
   await db.prepare("UPDATE content_items SET text = ? WHERE id = ?").bind(newText, item.id).run();
   await sendPreview(tg, db, chatId, { ...item, text: newText });
+  return true;
+}
+
+/** If the admin was asked for a new post photo, use this photo (kept in R2 too). Returns true when consumed. */
+export async function handlePostPhoto(
+  tg: Telegram,
+  db: D1Database,
+  files: R2Bucket,
+  adminId: number,
+  chatId: number,
+  photos: TgPhotoSize[],
+): Promise<boolean> {
+  const itemId = await getSetting<number>(db, PHOTO_SETTING(adminId));
+  if (!itemId) return false;
+  await db.prepare("DELETE FROM settings WHERE key = ?").bind(PHOTO_SETTING(adminId)).run();
+  const item = await getContent(db, itemId);
+  const largest = photos.reduce((a, b) => (b.width * b.height > a.width * a.height ? b : a));
+  if (!item || item.status !== "PREVIEW" || !largest) return false;
+  const file = await tg.call<{ file_path: string }>("getFile", { file_id: largest.file_id });
+  const r2Key = `posts/${item.id}-admin.jpg`;
+  await files.put(r2Key, await tg.downloadFile(file.file_path), { httpMetadata: { contentType: "image/jpeg" } });
+  const media: PostMedia = { photo_file_id: largest.file_id, r2_key: r2Key, source: "admin" };
+  await db.prepare("UPDATE content_items SET media = ? WHERE id = ?").bind(JSON.stringify(media), item.id).run();
+  await sendPreview(tg, db, chatId, { ...item, media: JSON.stringify(media) });
   return true;
 }
 

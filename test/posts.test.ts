@@ -37,9 +37,9 @@ const tick = (app: ReturnType<typeof makeApp>["app"], minute: number) =>
   app.scheduled({ scheduledTime: Date.parse(`2026-10-03T12:${String(minute).padStart(2, "0")}:00Z`) }, env);
 
 /** Upload research → render PDF → approve → render cover; returns the app with a post preview waiting. */
-async function approvedResearch(renderImage = fakeImageRenderer()) {
-  const tg = fakeTelegram({ "documents/r.json": JSON.stringify(fixture) });
-  const { app } = makeApp(tg, undefined, undefined, renderImage);
+async function approvedResearch(renderImage = fakeImageRenderer(), research: object = fixture, fetchUrl?: typeof fetch) {
+  const tg = fakeTelegram({ "documents/r.json": JSON.stringify(research) });
+  const { app } = makeApp(tg, undefined, undefined, renderImage, fetchUrl);
   await postUpdate(app, jsonUpload("r"));
   await tick(app, 1);
   const item = await env.DB.prepare("SELECT id FROM research_items").first<{ id: number }>();
@@ -55,21 +55,23 @@ const postStatus = (id: number) =>
   env.DB.prepare("SELECT status, channel_message_id FROM content_items WHERE id = ?").bind(id).first<{ status: string; channel_message_id: number | null }>();
 
 describe("channel post", () => {
-  it("approving research drafts a post: bold hook, organizer figures, budget, CTA, branded cover and a deep-link button", async () => {
+  it("approving research drafts a post: bold hook, organizer figures, trip-cost question, CTA, branded cover and a deep-link button", async () => {
     const { tg, post, renderImage } = await approvedResearch();
     expect(post.status).toBe("PREVIEW");
     expect(post.text.startsWith("<b>📣 Tadbirkorlar diqqatiga!</b>")).toBe(true);
     expect(post.text).toContain("<b>Canton Fair 2027</b>");
     expect(post.text).toContain("2025-yil ko'rsatkichlari");
-    expect(post.text).toContain("~$3 480");
-    expect(post.text).toContain("viza bilan bog'liq xarajatlar bundan tashqari");
-    expect(post.text).toContain("Tayyor hisob-kitobni PDF'da oling");
+    // The price is only in the bot: the post asks the question and sends people there.
+    expect(post.text).not.toMatch(/\$\s?\d/);
+    expect(post.text).toContain("Bu safar 2 kishiga qancha turadi?");
+    expect(post.text).toContain("safar narxini bilib oling");
     expect(post.text).not.toContain("Ro'yxatdan o'tish:"); // the deadline is UNKNOWN in the fixture
     expect(visibleLength(post.text)).toBeLessThanOrEqual(1024);
 
     expect(renderImage.rendered[0]).toMatchObject({ width: 1280, height: 720 });
     expect(renderImage.rendered[0]!.html).toContain("Canton Fair 2027");
-    expect(renderImage.rendered[0]!.html).toContain("~$3 480");
+    expect(renderImage.rendered[0]!.html).toContain("Narxi qancha?");
+    expect(renderImage.rendered[0]!.html).not.toMatch(/\$\s?\d/);
     expect(JSON.parse(post.media!).r2_key).toBe(`posts/${post.id}.png`);
     expect(await env.FILES.get(`posts/${post.id}.png`)).not.toBeNull();
 
@@ -78,8 +80,60 @@ describe("channel post", () => {
     const preview = tg.calls.filter((c) => c.method === "sendPhoto").at(-1)!;
     expect(preview.params.caption).toBe(post.text);
     const rows = (JSON.parse(String(preview.params.reply_markup)) as { inline_keyboard: { text: string; url?: string; callback_data?: string }[][] }).inline_keyboard;
-    expect(rows[0]![0]).toEqual({ text: "✈️ Tayyor hisob-kitobni olish", url: `https://t.me/test_bot?start=${funnel!.code}` });
+    expect(rows[0]![0]).toEqual({ text: "💰 Safar narxini bilish", url: `https://t.me/test_bot?start=${funnel!.code}` });
     expect(rows[1]!.map((b) => b.callback_data)).toEqual([`pp:p:${post.id}`, `pp:e:${post.id}`]);
+    expect(rows[2]!.map((b) => b.callback_data)).toEqual([`pp:i:${post.id}`, `pp:x:${post.id}`]);
+  });
+
+  it("uses the organizer's official poster as the photo when research gives one", async () => {
+    const withPoster = structuredClone(fixture) as typeof fixture & { exhibition: { poster_url?: string } };
+    withPoster.exhibition.poster_url = "https://www.cantonfair.org.cn/poster.jpg";
+    const fetched: string[] = [];
+    const fetchUrl = (async (url: string) => {
+      fetched.push(url);
+      return new Response(new Uint8Array([0xff, 0xd8, 0xff]), { headers: { "content-type": "image/jpeg" } });
+    }) as unknown as typeof fetch;
+    const renderImage = fakeImageRenderer();
+    const { tg, post } = await approvedResearch(renderImage, withPoster, fetchUrl);
+    expect(fetched).toEqual(["https://www.cantonfair.org.cn/poster.jpg"]);
+    expect(renderImage.rendered).toHaveLength(0);
+    expect(JSON.parse(post.media!)).toMatchObject({ r2_key: `posts/${post.id}.jpg`, source: "poster" });
+    expect(await env.FILES.get(`posts/${post.id}.jpg`)).not.toBeNull();
+    expect(tg.calls.filter((c) => c.method === "sendPhoto").at(-1)!.params.photo).toBe(`<file post-${post.id}.jpg>`);
+  });
+
+  it("falls back to our cover when the poster is not an image, and tells the admin", async () => {
+    const withPoster = structuredClone(fixture) as typeof fixture & { exhibition: { poster_url?: string } };
+    withPoster.exhibition.poster_url = "https://example.com/page.html";
+    const fetchUrl = (async () => new Response("<html>", { headers: { "content-type": "text/html" } })) as unknown as typeof fetch;
+    const renderImage = fakeImageRenderer();
+    const { tg, post } = await approvedResearch(renderImage, withPoster, fetchUrl);
+    expect(renderImage.rendered).toHaveLength(1);
+    expect(JSON.parse(post.media!)).toMatchObject({ r2_key: `posts/${post.id}.png`, source: "card" });
+    expect(tg.calls.some((c) => String(c.params.text ?? "").includes("постер скачать не удалось"))).toBe(true);
+  });
+
+  it("the admin can replace the photo with any picture, e.g. the official poster", async () => {
+    const { app, tg, post } = await approvedResearch();
+    await postUpdate(app, callbackUpdate(ADMIN_ID, `pp:i:${post.id}`));
+    const id = nextId++;
+    await postUpdate(app, {
+      update_id: id,
+      message: {
+        message_id: id,
+        from: { id: ADMIN_ID, is_bot: false, first_name: "Admin" },
+        chat: { id: ADMIN_ID, type: "private" },
+        date: 0,
+        photo: [
+          { file_id: "poster-small", file_unique_id: "s", width: 320, height: 180 },
+          { file_id: "poster-big", file_unique_id: "b", width: 1280, height: 720 },
+        ],
+      },
+    });
+    const media = JSON.parse((await env.DB.prepare("SELECT media FROM content_items WHERE id = ?").bind(post.id).first<{ media: string }>())!.media);
+    expect(media).toEqual({ photo_file_id: "poster-big", r2_key: `posts/${post.id}-admin.jpg`, source: "admin" });
+    expect(await env.FILES.get(media.r2_key)).not.toBeNull();
+    expect(tg.calls.at(-1)).toMatchObject({ method: "sendPhoto", params: { photo: "poster-big", caption: post.text } });
   });
 
   it("publishing needs a connected channel; only a bot admin can connect one", async () => {
@@ -172,8 +226,8 @@ describe("channel post", () => {
     const { buildPostText } = await import("../src/bot/posts");
     const text = buildPostText({ title: "x" } as never, long as never);
     expect(visibleLength(text)).toBeLessThanOrEqual(1024);
-    expect(text).toContain("~$3 480");
-    expect(text).toContain("Tayyor hisob-kitobni PDF'da oling");
+    expect(text).not.toMatch(/\$\s?\d/);
+    expect(text).toContain("safar narxini bilib oling");
   });
 
   it("losing admin rights in the channel disconnects it", async () => {

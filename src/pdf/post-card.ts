@@ -1,6 +1,6 @@
 // Cover image for a channel post: our own branded card (not a photo of the venue, so no image-rights question).
 import { FONT_CSS } from "./fonts.generated";
-import { money, type Budget, type ExhibitionResearch } from "./exhibition";
+import type { ExhibitionResearch } from "./exhibition";
 import type { Brand } from "./template";
 
 export const CARD_WIDTH = 1280;
@@ -30,21 +30,22 @@ h1{margin-top:14px;font-size:92px;line-height:.98;font-weight:800;letter-spacing
 .budget{position:absolute;right:64px;bottom:56px;width:400px;background:#15171a;color:#fff;border-radius:18px;padding:30px 34px}
 .budget .k{font-size:17px;letter-spacing:2px;text-transform:uppercase;opacity:.7}
 .budget .v{font-size:68px;font-weight:800;letter-spacing:-1.5px;margin-top:6px}
+.budget .v.q{font-size:52px;letter-spacing:-1px}
 .budget .s{font-size:19px;opacity:.85;margin-top:6px}
 .budget .pdf{margin-top:18px;display:inline-block;background:#b5622a;border-radius:10px;padding:10px 18px;font-weight:700;font-size:20px}
 .sample{position:absolute;left:0;right:0;top:0;background:#c8102e;color:#fff;text-align:center;font-weight:700;font-size:16px;padding:6px;letter-spacing:2px}
 `;
 
-export function renderPostCardHtml(brand: Brand, title: string, research: ExhibitionResearch | null, budget: Budget | null): string {
+export function renderPostCardHtml(brand: Brand, title: string, research: ExhibitionResearch | null): string {
   const e = research?.exhibition;
   const heading = e ? `${e.name}${e.edition ? ` ${e.edition}` : ""}` : title;
   const meta = e
     ? `<div class="meta"><div><span></span>${esc(e.dates.value)}</div><div><span></span>${esc(e.city)}, Xitoy</div></div>`
     : "";
   const box =
-    research && budget
-      ? `<div class="budget"><div class="k">2 kishi uchun safar</div><div class="v">~${money(budget.total)}</div>` +
-        `<div class="s">aviachipta · mehmonxona · transport</div><div class="pdf">To'liq hisob-kitob PDF'da</div></div>`
+    research
+      ? `<div class="budget"><div class="k">2 kishilik biznes-safar</div><div class="v q">Narxi qancha?</div>` +
+        `<div class="s">aviachipta · mehmonxona · transport</div><div class="pdf">Botda bilib oling</div></div>`
       : `<div class="budget"><div class="k">Yangi material</div><div class="v" style="font-size:48px">PDF</div><div class="pdf">Botda oling</div></div>`;
   const phase = e ? (e.phases.find((p) => p.name === e.focus_phase) ?? e.phases[0]) : undefined;
   const chips = phase
