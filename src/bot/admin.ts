@@ -2,6 +2,7 @@ import { dashboardStats, logAdminAction } from "../db";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard } from "../telegram/types";
 import { renderMagnetList } from "./magnets";
+import { renderLeads, renderStatistics } from "./stats";
 import { adminTexts } from "./texts";
 
 export const ADMIN_CALLBACK_PREFIX = "adm:";
@@ -39,6 +40,8 @@ async function renderSection(db: D1Database, key: string, now: Date): Promise<{ 
   const section = SECTIONS.find((s) => s.key === key);
   if (!section) return { text: adminTexts.menuTitle, keyboard: adminMenuKeyboard() };
   if (key === "magnets") return renderMagnetList(db);
+  if (key === "leads") return { text: await renderLeads(db), keyboard: backKeyboard };
+  if (key === "stats") return { text: await renderStatistics(db, now), keyboard: backKeyboard };
   if (key === "research") {
     const text =
       `<b>🔎 Research</b>\n\n` +

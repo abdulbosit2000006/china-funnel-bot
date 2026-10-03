@@ -1,5 +1,6 @@
 import { runAiTick } from "./bot/ai";
 import { runFollowups } from "./bot/leads";
+import { runDailyReport } from "./bot/stats";
 import { POST_CARD_JOB, postPreviewWithoutPhoto, runPostCardJob } from "./bot/posts";
 import { createOpenAI, type AiClient } from "./ai/openai";
 import { RENDER_JOB, runRenderJob } from "./bot/research";
@@ -159,6 +160,8 @@ export function createApp(deps: AppDeps = defaultDeps) {
     async scheduled(controller: { scheduledTime: number }, env: Env): Promise<void> {
       const now = new Date(controller.scheduledTime);
       await runFollowups({ db: env.DB, tg: deps.telegram(env), now }).catch((e) => log.error("followups.failed", e));
+      await runDailyReport({ db: env.DB, tg: deps.telegram(env), admins: parseAdminIds(env.ADMIN_TG_IDS), now, timeZone: env.TIMEZONE || "Asia/Tashkent" })
+        .catch((e) => log.error("report.failed", e));
       await runAiTick({ tg: deps.telegram(env), db: env.DB, ai: (deps.ai ?? defaultAi)(env) }, now).catch((e) => log.error("ai.tick_failed", e));
       await runJobs(env, now);
       if (now.getUTCMinutes() === 0) {
