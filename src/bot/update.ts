@@ -4,6 +4,7 @@ import type { TgCallbackQuery, TgMessage, TgUpdate } from "../telegram/types";
 import type { AiClient } from "../ai/openai";
 import { ADMIN_CALLBACK_PREFIX, handleAdminCallback, sendAdminMenu } from "./admin";
 import { AI_CALLBACK_PREFIX, handleAiCallback, requestDiscovery, requestResearch } from "./ai";
+import { handleAutopilotCommand } from "./autopilot";
 import { CTA_CALLBACK_PREFIX, deliverLeadMagnet, handleCtaClick } from "./funnel";
 import { MAGNET_CALLBACK_PREFIX, handleAdminUpload, handleMagnetCallback } from "./magnets";
 import { POST_CALLBACK_PREFIX, handleChannelMembership, handlePostCallback, handlePostEditText, handlePostPhoto } from "./posts";
@@ -17,6 +18,7 @@ export interface BotContext {
   tg: Telegram;
   ai: AiClient | null;
   admins: Set<number>;
+  timeZone: string;
   now: Date;
 }
 
@@ -86,6 +88,17 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
   if (isAdmin && /^\/admin(?:@\w+)?\s*$/.test(text.trim())) return sendAdminMenu(ctx.tg, message.chat.id);
   const find = /^\/find(?:@\w+)?(?:\s+([\s\S]+))?$/.exec(text.trim());
   if (isAdmin && find) return requestDiscovery(ctx.tg, ctx.db, ctx.ai, message.chat.id, from.id, find[1]?.trim().slice(0, 200) || null, ctx.now);
+  const ideas = /^\/ideas(?:@\w+)?(?:\s+([\s\S]+))?$/.exec(text.trim());
+  if (isAdmin && ideas) return requestDiscovery(ctx.tg, ctx.db, ctx.ai, message.chat.id, from.id, ideas[1]?.trim().slice(0, 200) || null, ctx.now, "MANUFACTURING");
+  const business = /^\/business(?:@\w+)?(?:\s+([\s\S]+))?$/.exec(text.trim());
+  if (isAdmin && business) {
+    if (!business[1]?.trim()) return void (await sendMessage(ctx.tg, message.chat.id, "Напишите идею после команды, например: <code>/business производство бумажных стаканов</code>"));
+    return requestResearch(ctx.tg, ctx.db, ctx.ai, message.chat.id, from.id, business[1].trim().slice(0, 200), ctx.now, "MANUFACTURING");
+  }
+  const autopilot = /^\/autopilot(?:@\w+)?(?:\s+([\s\S]+))?$/.exec(text.trim());
+  if (isAdmin && autopilot) {
+    return handleAutopilotCommand({ ...ctx, timeZone: ctx.timeZone }, message.chat.id, from.id, autopilot[1]?.trim() ?? "");
+  }
   const research = /^\/research(?:@\w+)?(?:\s+([\s\S]+))?$/.exec(text.trim());
   if (isAdmin && research) {
     if (!research[1]?.trim()) return void (await sendMessage(ctx.tg, message.chat.id, "Напишите выставку после команды, например: <code>/research CIIF Shanghai 2027</code>"));

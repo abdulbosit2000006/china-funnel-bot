@@ -48,10 +48,12 @@ async function renderSection(db: D1Database, key: string, now: Date): Promise<{ 
       `AI сам ищет выставки и собирает research с источниками; бюджет считает код, PDF и пост приходят вам на одобрение.\n\n` +
       `• <b>🔎 Найти выставки</b> или <code>/find металл</code>: список подходящих выставок, по любой можно запустить research.\n` +
       `• <code>/research CIIF Shanghai 2027</code>: research сразу по названию.\n` +
+      `• <b>💡 Найти бизнес-идеи</b> или <code>/ideas упаковка</code>, <code>/business производство бумажных стаканов</code>: производственная бизнес-модель с расчётом.\n` +
+      `• <code>/autopilot</code>: каждую неделю 2 выставки и 2 бизнес-идеи, готовый пост с PDF в 9:00.\n` +
       `• Можно прислать готовый research-пакет файлом .json.`;
     return {
       text,
-      keyboard: [[{ text: "🔎 Найти выставки", callback_data: "ai:d" }], ...backKeyboard],
+      keyboard: [[{ text: "🔎 Найти выставки", callback_data: "ai:d" }], [{ text: "💡 Найти бизнес-идеи", callback_data: "ai:b" }], ...backKeyboard],
     };
   }
   if (key === "dashboard") {

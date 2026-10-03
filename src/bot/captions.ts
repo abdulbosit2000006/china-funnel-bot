@@ -1,6 +1,7 @@
 // Channel post captions. Rule from Abdul (2026-10-03): posts never show a price; the button sends people to the bot for it.
 import type { LeadMagnetRow } from "../db";
 import type { ExhibitionResearch } from "../pdf/exhibition";
+import type { ManufacturingResearch } from "../pdf/manufacturing";
 import { escapeHtml } from "../telegram/api";
 
 /** Telegram limit for a photo caption (visible characters). */
@@ -65,3 +66,38 @@ export function buildPostText(magnet: LeadMagnetRow, research: ExhibitionResearc
   return fitCaption(attempts, build);
 }
 
+
+/**
+ * Business idea post: hook, what is produced, the concrete line, verified figures, why it is interesting, and the
+ * question about investment and payback. The numbers themselves are in the PDF in the bot.
+ */
+export function manufacturingCaption(data: ManufacturingResearch): string {
+  const hook = "<b>📣 Tadbirkorlar diqqatiga!</b>";
+  const build = (o: { tagline: boolean; stats: number; why: number }) => {
+    const parts = [hook];
+    parts.push(`🏭 <b>${escapeHtml(data.product.name)}</b>${o.tagline && data.product.tagline ? ` — ${escapeHtml(data.product.tagline)}` : ""}`);
+    parts.push(`⚙️ <b>Liniya:</b> ${escapeHtml(data.equipment.name)}`);
+    if (data.post_stats?.length && o.stats > 0) {
+      parts.push(`📊 <b>Asosiy ko'rsatkichlar:</b>\n${data.post_stats.slice(0, o.stats).map((s) => `🔹 ${escapeHtml(s.label)}: ${escapeHtml(s.value)}`).join("\n")}`);
+    }
+    if (o.why > 0 && data.highlights.length) {
+      parts.push(`✅ <b>Nega qiziq:</b>\n${data.highlights.slice(0, o.why).map((h) => `• ${escapeHtml(h)}`).join("\n")}`);
+    }
+    parts.push(
+      `💰 <b>Qancha investitsiya kerak va qachon o'zini oqlaydi?</b>\n` +
+        `Uskuna, xomashyo, xarajatlar, tannarx, foyda va o'zini oqlash muddati: to'liq hisob-kitob botda.`,
+    );
+    parts.push(`👇 <b>Pastdagi tugmani bosing va biznes hisob-kitobini oling!</b>`);
+    return parts.join("\n\n");
+  };
+  return fitCaption(
+    [
+      { tagline: true, stats: 4, why: 3 },
+      { tagline: true, stats: 3, why: 2 },
+      { tagline: false, stats: 2, why: 2 },
+      { tagline: false, stats: 0, why: 1 },
+      { tagline: false, stats: 0, why: 0 },
+    ],
+    build,
+  );
+}

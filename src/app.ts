@@ -1,4 +1,5 @@
 import { runAiTick } from "./bot/ai";
+import { AUTOPILOT_JOB, runAutopilot, runAutopilotDelivery } from "./bot/autopilot";
 import { runFollowups } from "./bot/leads";
 import { runDailyReport } from "./bot/stats";
 import { POST_CARD_JOB, postPreviewWithoutPhoto, runPostCardJob } from "./bot/posts";
@@ -79,6 +80,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
         tg: deps.telegram(env),
         ai: (deps.ai ?? defaultAi)(env),
         admins: parseAdminIds(env.ADMIN_TG_IDS),
+        timeZone: env.TIMEZONE || "Asia/Tashkent",
         now,
       });
     } catch (error) {
@@ -109,6 +111,9 @@ export function createApp(deps: AppDeps = defaultDeps) {
           { command: "admin", description: "Админ-панель" },
           { command: "find", description: "AI: найти выставки (можно с темой)" },
           { command: "research", description: "AI: research по выставке" },
+          { command: "ideas", description: "AI: найти бизнес-идеи (можно с темой)" },
+          { command: "business", description: "AI: бизнес-модель по названию" },
+          { command: "autopilot", description: "Автопилот: статус и запуск" },
         ],
       });
     }
@@ -126,7 +131,9 @@ export function createApp(deps: AppDeps = defaultDeps) {
     const payload = JSON.parse(job.payload) as { researchId: number; contentId: number; chatId: number };
     try {
       if (job.kind === RENDER_JOB) {
-        await runRenderJob({ tg, db: env.DB, files: env.FILES, renderPdf: deps.renderPdf(env), now }, payload);
+        await runRenderJob({ tg, db: env.DB, files: env.FILES, renderPdf: deps.renderPdf(env), now, fetchUrl: deps.fetchUrl ?? fetch }, payload);
+      } else if (job.kind === AUTOPILOT_JOB) {
+        await runAutopilotDelivery({ tg, db: env.DB, files: env.FILES, now }, payload);
       } else if (job.kind === POST_CARD_JOB) {
         await runPostCardJob({ tg, db: env.DB, files: env.FILES, renderImage: deps.renderImage(env), fetchUrl: deps.fetchUrl ?? fetch }, payload);
       }
@@ -139,7 +146,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
         await postPreviewWithoutPhoto(tg, env.DB, payload).catch((e) => log.error("post.fallback_failed", e));
       } else if (gaveUp) {
         await tg
-          .call("sendMessage", { chat_id: payload.chatId, text: `⚠️ Не удалось создать PDF после ${job.attempts} попыток. Ошибка записана в логи.` })
+          .call("sendMessage", { chat_id: payload.chatId, text: `⚠️ Не удалось ${job.kind === AUTOPILOT_JOB ? "доставить пост автопилота" : "создать PDF"} после ${job.attempts} попыток. Ошибка записана в логи.` })
           .catch(() => undefined);
       }
     }
@@ -159,10 +166,14 @@ export function createApp(deps: AppDeps = defaultDeps) {
 
     async scheduled(controller: { scheduledTime: number }, env: Env): Promise<void> {
       const now = new Date(controller.scheduledTime);
+      const ai = (deps.ai ?? defaultAi)(env);
+      const admins = parseAdminIds(env.ADMIN_TG_IDS);
+      const timeZone = env.TIMEZONE || "Asia/Tashkent";
       await runFollowups({ db: env.DB, tg: deps.telegram(env), now }).catch((e) => log.error("followups.failed", e));
-      await runDailyReport({ db: env.DB, tg: deps.telegram(env), admins: parseAdminIds(env.ADMIN_TG_IDS), now, timeZone: env.TIMEZONE || "Asia/Tashkent" })
+      await runDailyReport({ db: env.DB, tg: deps.telegram(env), admins, now, timeZone })
         .catch((e) => log.error("report.failed", e));
-      await runAiTick({ tg: deps.telegram(env), db: env.DB, ai: (deps.ai ?? defaultAi)(env) }, now).catch((e) => log.error("ai.tick_failed", e));
+      await runAutopilot({ db: env.DB, tg: deps.telegram(env), ai, admins, now, timeZone }).catch((e) => log.error("autopilot.failed", e));
+      await runAiTick({ tg: deps.telegram(env), db: env.DB, ai }, now).catch((e) => log.error("ai.tick_failed", e));
       await runJobs(env, now);
       if (now.getUTCMinutes() === 0) {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();

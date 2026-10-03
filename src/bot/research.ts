@@ -5,7 +5,7 @@ import type { PdfRenderer } from "../pdf/render";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import type { InlineKeyboard, TgMessage } from "../telegram/types";
 import { botUsername, renderMagnet } from "./magnets";
-import { createPostDraft } from "./posts";
+import { createPostDraft, fetchPoster } from "./posts";
 import { hasSubject, specByResearchKind, subjectSpec, type Researched, type SubjectSpec } from "./subjects";
 
 export const RESEARCH_CALLBACK_PREFIX = "rp:";
@@ -88,9 +88,19 @@ ${spec.summary(data)}`);
   return row!.id;
 }
 
+/** The equipment photo as a data: URI, fetched here so a slow image host cannot stall the PDF render. */
+async function pdfImage(fetchUrl: typeof fetch | undefined, url: string | undefined): Promise<string | null> {
+  if (!fetchUrl || !url) return null;
+  const image = await fetchPoster(fetchUrl, url);
+  if (!image) return null;
+  let binary = "";
+  for (let i = 0; i < image.bytes.length; i += 0x8000) binary += String.fromCharCode(...image.bytes.subarray(i, i + 0x8000));
+  return `data:${image.type};base64,${btoa(binary)}`;
+}
+
 /** Cron job: render the PDF, keep the original in R2 and send it to the admin for review. */
 export async function runRenderJob(
-  deps: { tg: Telegram; db: D1Database; files: R2Bucket; renderPdf: PdfRenderer; now: Date },
+  deps: { tg: Telegram; db: D1Database; files: R2Bucket; renderPdf: PdfRenderer; now: Date; fetchUrl?: typeof fetch },
   payload: { researchId: number; chatId: number },
 ): Promise<void> {
   const { tg, db, files } = deps;
@@ -99,7 +109,7 @@ export async function runRenderJob(
   const spec = specByResearchKind(item.kind);
   const data = JSON.parse(item.data) as Researched;
   const brand = { name: BRAND_NAME, mark: BRAND_MARK, botUsername: await botUsername(tg, db) };
-  const page = spec.renderPdf(data, brand);
+  const page = spec.renderPdf(data, brand, await pdfImage(deps.fetchUrl, spec.pdfImageUrl(data)));
   const pdf = await deps.renderPdf(page.html, page.footer);
 
   const r2Key = `research/${item.id}/${data.slug}.pdf`;

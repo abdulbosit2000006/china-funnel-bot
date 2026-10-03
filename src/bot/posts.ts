@@ -1,13 +1,13 @@
-import { createFunnelForSlug, getLeadMagnet, getSetting, logAdminAction, putSetting, type FunnelRow, type LeadMagnetRow } from "../db";
+import { activateLeadMagnet, archiveLeadMagnet, createFunnelForSlug, getLeadMagnet, getSetting, logAdminAction, putSetting, type FunnelRow, type LeadMagnetRow } from "../db";
 import { enqueueJob } from "../jobs";
 import { BRAND_MARK, BRAND_NAME } from "../pdf/content";
-import type { ExhibitionResearch } from "../pdf/exhibition";
 import { log } from "../log";
-import { CARD_HEIGHT, CARD_WIDTH, renderPostCardHtml } from "../pdf/post-card";
+import { CARD_HEIGHT, CARD_WIDTH, renderCardHtml } from "../pdf/post-card";
 import type { ImageRenderer } from "../pdf/render";
 import { fmtDate } from "../pdf/template";
 import { escapeHtml, sendMessage, type Telegram } from "../telegram/api";
 import { MAX_CAPTION, buildPostText } from "./captions";
+import { specByMagnetType, specByResearchKind, type Researched, type SubjectSpec } from "./subjects";
 
 export { MAX_CAPTION, buildPostText, visibleLength } from "./captions";
 import type { InlineKeyboard, TgChatMemberUpdated, TgPhotoSize } from "../telegram/types";
@@ -20,7 +20,8 @@ const PHOTO_SETTING = (adminId: number) => `await.post_photo.${adminId}`;
 /** Telegram accepts photos up to 10 MB. */
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 // The price is the reason to open the bot, so the post never shows it (Abdul, 2026-10-03).
-const CTA_BUTTON = "💰 Safar narxini bilish";
+const GENERIC_CTA = "📥 Materialni olish";
+const ctaFor = (magnet: LeadMagnetRow | null) => (magnet && specByMagnetType(magnet.type)?.ctaButton) || GENERIC_CTA;
 export const POST_CARD_JOB = "RENDER_POST_CARD";
 
 export interface ChannelInfo {
@@ -45,12 +46,12 @@ interface PostMedia {
   source?: "poster" | "card" | "admin";
 }
 
-async function loadResearch(db: D1Database, magnet: LeadMagnetRow): Promise<ExhibitionResearch | null> {
+async function loadResearch(db: D1Database, magnet: LeadMagnetRow): Promise<{ spec: SubjectSpec; data: Researched } | null> {
   const row = await db
-    .prepare("SELECT data FROM research_items WHERE id = (SELECT research_item_id FROM lead_magnets WHERE id = ?)")
+    .prepare("SELECT kind, data FROM research_items WHERE id = (SELECT research_item_id FROM lead_magnets WHERE id = ?)")
     .bind(magnet.id)
-    .first<{ data: string }>();
-  return row ? (JSON.parse(row.data) as ExhibitionResearch) : null;
+    .first<{ kind: string; data: string }>();
+  return row ? { spec: specByResearchKind(row.kind), data: JSON.parse(row.data) as Researched } : null;
 }
 
 const getContent = (db: D1Database, id: number) =>
@@ -69,8 +70,10 @@ export async function createPostDraft(
   magnet: LeadMagnetRow,
   funnel: FunnelRow,
   now: string,
+  opts: { quiet?: boolean } = {},
 ): Promise<void> {
-  const text = buildPostText(magnet, await loadResearch(db, magnet));
+  const loaded = await loadResearch(db, magnet);
+  const text = loaded ? loaded.spec.caption(magnet, loaded.data) : buildPostText(magnet, null);
   const row = await db
     .prepare(
       "INSERT INTO content_items (lead_magnet_id, funnel_id, text, status, created_at) VALUES (?, ?, ?, 'DRAFT', ?) RETURNING id",
@@ -79,13 +82,13 @@ export async function createPostDraft(
     .first<{ id: number }>();
   await db.prepare("UPDATE funnels SET content_item_id = ? WHERE id = ?").bind(row!.id, funnel.id).run();
   await enqueueJob(db, POST_CARD_JOB, { contentId: row!.id, chatId }, now);
-  await sendMessage(tg, chatId, "🎨 Готовлю пост с обложкой, превью придёт через 1–2 минуты.");
+  if (!opts.quiet) await sendMessage(tg, chatId, "🎨 Готовлю пост с обложкой, превью придёт через 1–2 минуты.");
 }
 
 const POSTER_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png" };
 
 /** Downloads the organizer's official poster. Returns null (and logs why) when it is not a usable photo. */
-async function fetchPoster(fetchUrl: typeof fetch, url: string): Promise<{ bytes: Uint8Array; type: string; ext: string } | null> {
+export async function fetchPoster(fetchUrl: typeof fetch, url: string): Promise<{ bytes: Uint8Array; type: string; ext: string } | null> {
   try {
     const res = await fetchUrl(url, { signal: AbortSignal.timeout(15_000), headers: { accept: "image/jpeg,image/png" } });
     const type = (res.headers.get("content-type") ?? "").split(";")[0]!.trim().toLowerCase();
@@ -117,14 +120,14 @@ export async function runPostCardJob(
   const item = await getContent(db, payload.contentId);
   if (!item || item.status !== "DRAFT") return;
   const magnet = (await getLeadMagnet(db, item.lead_magnet_id))!;
-  const research = await loadResearch(db, magnet);
-  const posterUrl = research?.exhibition.poster_url;
+  const loaded = await loadResearch(db, magnet);
+  const posterUrl = loaded?.spec.posterUrl(loaded.data);
   const poster = posterUrl ? await fetchPoster(deps.fetchUrl, posterUrl) : null;
   let image: { bytes: Uint8Array; type: string; ext: string; source: PostMedia["source"] };
   if (poster) image = { ...poster, source: "poster" };
   else {
     const brand = { name: BRAND_NAME, mark: BRAND_MARK, botUsername: await botUsername(tg, db) };
-    const png = await deps.renderImage(renderPostCardHtml(brand, magnet.title, research), CARD_WIDTH, CARD_HEIGHT);
+    const png = await deps.renderImage(renderCardHtml(brand, loaded ? loaded.spec.card(magnet.title, loaded.data) : specByResearchKind("EXHIBITION").card(magnet.title, null)), CARD_WIDTH, CARD_HEIGHT);
     image = { bytes: png, type: "image/png", ext: "png", source: "card" };
   }
   const r2Key = `posts/${item.id}.${image.ext}`;
@@ -165,7 +168,7 @@ async function sendPreviewHeader(tg: Telegram, db: D1Database, chatId: number): 
 
 async function previewKeyboard(tg: Telegram, db: D1Database, item: ContentRow): Promise<InlineKeyboard> {
   return [
-    [{ text: CTA_BUTTON, url: await deepLink(tg, db, item.funnel_id) }],
+    [{ text: ctaFor(await getLeadMagnet(db, item.lead_magnet_id)), url: await deepLink(tg, db, item.funnel_id) }],
     [
       { text: "✅ Опубликовать", callback_data: `${POST_CALLBACK_PREFIX}p:${item.id}` },
       { text: "✏️ Изменить текст", callback_data: `${POST_CALLBACK_PREFIX}e:${item.id}` },
@@ -251,8 +254,14 @@ export async function handlePostCallback(
       reply_markup: { inline_keyboard: [] },
     });
 
+  const magnet = await getLeadMagnet(db, item.lead_magnet_id);
   if (action === "x") {
     await db.prepare("UPDATE content_items SET status = 'REJECTED' WHERE id = ?").bind(item.id).run();
+    if (magnet?.status === "DRAFT") {
+      // Autopilot bundle: rejecting the post also drops its PDF, which was never live.
+      await archiveLeadMagnet(db, magnet.id, at);
+      await db.prepare("UPDATE research_items SET status = 'REJECTED', updated_at = ? WHERE lead_magnet_id = ? AND status = 'IN_REVIEW'").bind(at, magnet.id).run();
+    }
     await logAdminAction(db, callback.fromId, "post.reject", at, { id: item.id });
     await answer("Не опубликовано.");
     await clearControls();
@@ -270,9 +279,18 @@ export async function handlePostCallback(
     .bind(item.id)
     .run();
   if (!claimed.meta.changes) return void (await answer("Уже обработано."));
+  if (magnet && magnet.status !== "ACTIVE") {
+    // Autopilot bundle: one tap approves the PDF too, so the button works the moment the post is out.
+    await activateLeadMagnet(db, magnet, at);
+    await db
+      .prepare("UPDATE research_items SET status = 'ACTIVE', approved_at = ?1, approved_by = ?2, updated_at = ?1 WHERE lead_magnet_id = ?3 AND status = 'IN_REVIEW'")
+      .bind(at, callback.fromId, magnet.id)
+      .run();
+    await logAdminAction(db, callback.fromId, "research.approve", at, { lead_magnet_id: magnet.id, via: "post" });
+  }
   let sent: { message_id: number };
   try {
-    sent = await sendPost(tg, channel.id, item, [[{ text: CTA_BUTTON, url: await deepLink(tg, db, item.funnel_id) }]]);
+    sent = await sendPost(tg, channel.id, item, [[{ text: ctaFor(magnet), url: await deepLink(tg, db, item.funnel_id) }]]);
   } catch (error) {
     // Only a failed send returns the post to PREVIEW; once Telegram accepted it, it must never be sent again.
     await db.prepare("UPDATE content_items SET status = 'PREVIEW' WHERE id = ?").bind(item.id).run();

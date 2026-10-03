@@ -7,7 +7,10 @@ import { calculateBudget, money, validateResearch, type ExhibitionResearch } fro
 import { exhibitionCard, type CardData } from "../pdf/post-card";
 import { footerTemplate, renderExhibitionHtml, type Brand } from "../pdf/template";
 import { escapeHtml } from "../telegram/api";
-import { buildPostText } from "./captions";
+import { buildPostText, manufacturingCaption } from "./captions";
+import { manufacturingDiscoverPrompt, manufacturingPrompt } from "../ai/prompts-manufacturing";
+import { calculateManufacturing, moneySigned, validateManufacturing, type ManufacturingResearch } from "../pdf/manufacturing";
+import { manufacturingFooter, renderManufacturingHtml } from "../pdf/manufacturing-template";
 
 export type Subject = "EXHIBITION" | "MANUFACTURING";
 
@@ -25,7 +28,10 @@ export interface SubjectSpec {
   /** Admin summary of a valid package (HTML). */
   summary(data: Researched): string;
   calc(data: Researched): unknown;
-  renderPdf(data: Researched, brand: Brand): { html: string; footer: string };
+  /** imageSrc: a data: URI of the equipment photo fetched beforehand (null hides it). */
+  renderPdf(data: Researched, brand: Brand, imageSrc?: string | null): { html: string; footer: string };
+  /** Photo for the PDF (fetched by the render job), if any. */
+  pdfImageUrl(data: Researched): string | undefined;
   caption(magnet: LeadMagnetRow, data: Researched | null): string;
   ctaButton: string;
   card(title: string, data: Researched | null): CardData;
@@ -68,13 +74,61 @@ const exhibition: SubjectSpec = {
   ctaButton: "💰 Safar narxini bilish",
   card: (title, raw) => exhibitionCard(title, raw as unknown as ExhibitionResearch | null),
   posterUrl: (raw) => (raw as unknown as ExhibitionResearch).exhibition.poster_url,
+  pdfImageUrl: () => undefined,
 };
 
-const SPECS: Partial<Record<Subject, SubjectSpec>> = { EXHIBITION: exhibition };
+const manufacturing: SubjectSpec = {
+  subject: "MANUFACTURING",
+  researchKind: "MANUFACTURING",
+  magnetType: "MANUFACTURING_MODEL",
+  funnelKind: "MANUFACTURING",
+  nameRu: "бизнес-модель",
+  discoverPrompt: manufacturingDiscoverPrompt,
+  researchPrompt: manufacturingPrompt,
+  validate: (raw) => validateManufacturing(raw),
+  summary(raw) {
+    const data = raw as unknown as ManufacturingResearch;
+    const m = calculateManufacturing(data);
+    const payback = m.payback.value !== null ? `${m.payback.value} мес.` : `не считается (${escapeHtml(m.payback.reason ?? "нет прибыли")})`;
+    return (
+      `<b>${escapeHtml(data.title)}</b>\n` +
+      `slug: <code>${data.slug}</code> · research ${data.research_date}\n` +
+      `Линия: ${escapeHtml(data.equipment.name)}\n` +
+      `CAPEX: <b>${money(m.capex.total)}</b> · операционная прибыль/мес: <b>${moneySigned(m.month.operating_profit.value ?? 0)}</b> · окупаемость: ${payback}\n` +
+      `Самая слабая метка во входных данных: ${m.weakest}` +
+      (m.warnings.length ? `\n⚠️ ${m.warnings.map((w) => escapeHtml(w)).join("\n⚠️ ")}` : "") +
+      (data.sample ? "\n🧪 Пакет помечен как образец: в PDF будет водяной знак NAMUNA." : "")
+    );
+  },
+  calc: (raw) => calculateManufacturing(raw as unknown as ManufacturingResearch),
+  renderPdf(raw, brand, imageSrc) {
+    const data = raw as unknown as ManufacturingResearch;
+    return {
+      html: renderManufacturingHtml(data, calculateManufacturing(data), brand, DEFAULT_CONTENT, { imageSrc: imageSrc ?? null }),
+      footer: manufacturingFooter(brand, data),
+    };
+  },
+  caption: (magnet, raw) => (raw ? manufacturingCaption(raw as unknown as ManufacturingResearch) : buildPostText(magnet, null)),
+  ctaButton: "📊 Biznes hisob-kitobini olish",
+  card(title, raw) {
+    const data = raw as unknown as ManufacturingResearch | null;
+    if (!data) return exhibitionCard(title, null);
+    return {
+      tag: "Biznes g'oya",
+      kicker: "Ishlab chiqarish · O'zbekiston",
+      heading: data.product.name,
+      meta: [data.equipment.name.slice(0, 40)],
+      tagline: data.product.tagline,
+      chips: data.equipment.raw_materials.map((r) => r.name),
+      box: { k: "Liniya + xomashyo + xarajatlar", v: "Foyda qancha?", s: "investitsiya · tannarx · o'zini oqlash", cta: "Botda bilib oling" },
+      sample: data.sample,
+    };
+  },
+  posterUrl: (raw) => (raw as unknown as ManufacturingResearch).equipment.image_url,
+  pdfImageUrl: (raw) => (raw as unknown as ManufacturingResearch).equipment.image_url,
+};
 
-export function registerSubject(spec: SubjectSpec): void {
-  SPECS[spec.subject] = spec;
-}
+const SPECS: Partial<Record<Subject, SubjectSpec>> = { EXHIBITION: exhibition, MANUFACTURING: manufacturing };
 
 export function subjectSpec(subject: Subject): SubjectSpec {
   const spec = SPECS[subject];
