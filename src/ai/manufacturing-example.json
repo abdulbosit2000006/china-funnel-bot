@@ -1,0 +1,97 @@
+{
+  "slug": "egg-tray-line-example",
+  "title": "Tuxum taglik (lotok) ishlab chiqarish: dastlabki biznes model",
+  "research_date": "2026-01-01",
+  "currency": "USD",
+  "product": {
+    "name": "Tuxum taglik ishlab chiqarish",
+    "tagline": "MISOL: makulaturadan tuxum tagliklari, parrandachilik fermalari uchun",
+    "description": "MISOL MATNI. 30 talik qog'oz tuxum tagliklari makulatura (eski karton) dan quyib olinadi. Xaridorlar: parrandachilik fermalari, tuxum ulgurji savdochilari.",
+    "unit": "dona"
+  },
+  "equipment": {
+    "name": "MISOL: avtomatik tuxum taglik liniyasi, 4 qolipli baraban",
+    "manufacturer": { "value": "Misol Machinery Co., Ltd", "label": "MARKET DATA", "source": 1 },
+    "model": { "value": "EX-4x4", "label": "MARKET DATA", "source": 1 },
+    "image_url": "https://www.example.com/images/ex-4x4-line.jpg",
+    "price": { "value": 25000, "label": "MARKET DATA", "source": 1, "note": "Marketplace narxi, FOB; rasmiy taklif emas" },
+    "capacity_per_hour": { "value": 1500, "label": "MARKET DATA", "source": 1 },
+    "power_kw": { "value": 45, "label": "MARKET DATA", "source": 1 },
+    "area_m2": { "value": 200, "label": "ESTIMATED", "source": 1 },
+    "operators": { "value": 4, "label": "MARKET DATA", "source": 1 },
+    "weight": { "value": "taxminan 8 t", "label": "MARKET DATA", "source": 1 },
+    "automation": { "value": "Yarim avtomatik: quritish liniyasi bilan", "label": "MARKET DATA", "source": 1 },
+    "included": ["Pulper", "Quyish mashinasi", "Qoliplar"],
+    "additional_equipment": ["Quritish kamerasi (gaz)", "Press"],
+    "installation": { "value": "Sotuvchi muhandisi, 10 kun", "label": "MARKET DATA", "source": 1 },
+    "lead_time": { "value": "30 kun", "label": "MARKET DATA", "source": 1 },
+    "warranty": { "value": "Noma'lum", "label": "UNKNOWN", "source": null },
+    "raw_materials": [
+      { "name": "Makulatura (karton)", "spec": "Eski gofrokarton", "price": { "value": "$60–90 / t", "label": "MARKET DATA", "source": 3 } }
+    ]
+  },
+  "highlights": [
+    "MISOL: mahalliy xomashyo (makulatura) ishlatiladi.",
+    "MISOL: parrandachilik fermalari doimiy xaridor."
+  ],
+  "post_stats": [
+    { "label": "quvvat", "value": "1 500 dona/soat", "source": 1 }
+  ],
+  "market": {
+    "summary": "MISOL: bozor tavsifi, faqat topilgan manbalar asosida.",
+    "selling_price_per_unit": { "value": 0.05, "label": "MARKET DATA", "source": 2, "note": "Ulgurji narx, so'mdan kurs bo'yicha" },
+    "wholesale_price": { "value": 0.07, "label": "MARKET DATA", "source": 2, "note": "Bozordagi chakana narx" },
+    "demand_indicators": [
+      { "value": "MISOL: parrandachilik sohasi o'sishi haqida rasmiy statistika", "label": "VERIFIED", "source": 4 }
+    ],
+    "competitors": [{ "name": "MISOL: mahalliy ishlab chiqaruvchi", "note": "Samarqand", "source": 2 }],
+    "imports_local": { "value": "Topilmadi", "label": "UNKNOWN", "source": null },
+    "customers": ["Parrandachilik fermalari", "Tuxum ulgurji savdochilari"],
+    "distribution": "To'g'ridan-to'g'ri fermalarga.",
+    "risks": ["MISOL: gaz narxi"],
+    "limitations": ["MISOL: bozor hajmi bo'yicha statistika topilmadi"]
+  },
+  "capex": [
+    { "key": "machine", "title": "Liniya", "amount": 25000, "label": "MARKET DATA", "source": 1, "note": "FOB" },
+    { "key": "shipping", "title": "Yetkazib berish Xitoy → O'zbekiston", "amount": 4000, "label": "ESTIMATED", "source": null },
+    { "key": "customs", "title": "Bojxona to'lovlari va QQS", "amount": null, "label": "UNKNOWN", "source": null }
+  ],
+  "opex_monthly": [
+    { "key": "rent", "title": "Sex ijarasi", "amount": 1000, "label": "MARKET DATA", "source": 5 },
+    { "key": "salaries", "title": "Ish haqi", "amount": 2000, "label": "ASSUMPTION", "source": null }
+  ],
+  "variable_costs": [
+    { "key": "paper", "title": "Makulatura", "amount": 0.006, "label": "ESTIMATED", "source": 3, "note": "≈ 80 g × $75/t" },
+    { "key": "gas", "title": "Quritish uchun gaz", "amount": null, "label": "UNKNOWN", "source": null }
+  ],
+  "revenue_costs": [
+    { "key": "turnover_tax", "title": "Aylanmadan olinadigan soliq", "pct": 4, "label": "VERIFIED", "source": 6 }
+  ],
+  "production": {
+    "hours_per_day": 16,
+    "shifts_per_day": 2,
+    "working_days_per_month": 26,
+    "utilization_base": 0.7,
+    "scrap_pct": 3,
+    "electricity_price_kwh": { "value": 0.08, "label": "VERIFIED", "source": 7 },
+    "label": "ASSUMPTION",
+    "source": null
+  },
+  "scenarios": [0.5, 0.7, 0.9],
+  "process": [
+    { "step": "Pulp", "text": "MISOL: makulatura suvda eziladi." },
+    { "step": "Quyish", "text": "MISOL: qoliplarda shakl beriladi." }
+  ],
+  "facility": [{ "title": "Maydon", "value": "MISOL: 200 m² + ombor", "label": "ESTIMATED", "source": 1 }],
+  "risks": [{ "title": "MISOL: narx raqobati", "text": "MISOL matni." }],
+  "verify_before_investment": ["Ishlab chiqaruvchidan rasmiy taklif (quotation)"],
+  "sources": [
+    { "id": 1, "title": "Liniya e'loni", "url": "https://www.example.com/listing/ex-4x4", "type": "MARKETPLACE", "retrieved_at": "2026-01-01" },
+    { "id": 2, "title": "O'zbekistondagi narxlar", "url": "https://www.example.uz/egg-trays", "type": "MARKETPLACE", "retrieved_at": "2026-01-01" },
+    { "id": 3, "title": "Makulatura narxi", "url": "https://www.example.uz/waste-paper", "type": "MARKETPLACE", "retrieved_at": "2026-01-01" },
+    { "id": 4, "title": "Statistika agentligi", "url": "https://www.example.uz/stat", "type": "GOV_INDUSTRY", "retrieved_at": "2026-01-01" },
+    { "id": 5, "title": "Ijara e'lonlari", "url": "https://www.example.uz/rent", "type": "MARKETPLACE", "retrieved_at": "2026-01-01" },
+    { "id": 6, "title": "Soliq kodeksi", "url": "https://www.example.uz/tax", "type": "OFFICIAL", "retrieved_at": "2026-01-01" },
+    { "id": 7, "title": "Elektr tariflari", "url": "https://www.example.uz/tariff", "type": "OFFICIAL", "retrieved_at": "2026-01-01" }
+  ]
+}
