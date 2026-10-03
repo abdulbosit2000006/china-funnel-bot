@@ -49,6 +49,35 @@
       "value": "Rasmiy sayt orqali Buyer Registration; birinchi marta qatnashuvchilar uchun bejik bepul bo'lishi mumkin.",
       "label": "UNKNOWN",
       "source": 1
+    },
+    "edition": "2027",
+    "tagline": "Xitoydagi eng yirik xalqaro savdo ko'rgazmasi",
+    "stats": {
+      "year": "2025",
+      "source": 1,
+      "items": [
+        {
+          "label": "ko'rgazma maydoni",
+          "value": "1 550 000 m²"
+        },
+        {
+          "label": "eksponent kompaniya",
+          "value": "31 000+"
+        },
+        {
+          "label": "xorijiy xaridor",
+          "value": "250 000+"
+        },
+        {
+          "label": "davlatdan tashrifchilar",
+          "value": "210+"
+        }
+      ]
+    },
+    "deadline": {
+      "value": "Onlayn ro'yxatdan o'tish ko'rgazmadan oldin ochiladi",
+      "label": "UNKNOWN",
+      "source": 1
     }
   },
   "scenario": {

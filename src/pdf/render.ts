@@ -24,3 +24,20 @@ export function createBrowserRenderer(binding: Fetcher): PdfRenderer {
     }
   };
 }
+
+/** HTML -> PNG of the given viewport size (post cover). */
+export type ImageRenderer = (html: string, width: number, height: number) => Promise<Uint8Array>;
+
+export function createBrowserImageRenderer(binding: Fetcher): ImageRenderer {
+  return async (html, width, height) => {
+    const browser = await puppeteer.launch(binding);
+    try {
+      const page = await browser.newPage();
+      await page.setViewport({ width, height, deviceScaleFactor: 1 });
+      await page.setContent(html, { waitUntil: "load", timeout: 30_000 });
+      return new Uint8Array((await page.screenshot({ type: "png" })) as Uint8Array);
+    } finally {
+      await browser.close();
+    }
+  };
+}

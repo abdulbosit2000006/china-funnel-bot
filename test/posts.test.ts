@@ -2,7 +2,8 @@ import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
 import type { TgUpdate } from "../src/telegram/types";
 import fixture from "./fixtures/exhibition-research.json";
-import { ADMIN_ID, CLIENT_ID, callbackUpdate, fakeTelegram, makeApp, messageUpdate, postUpdate } from "./helpers";
+import { visibleLength } from "../src/bot/posts";
+import { ADMIN_ID, CLIENT_ID, callbackUpdate, fakeImageRenderer, fakeTelegram, makeApp, messageUpdate, postUpdate } from "./helpers";
 
 const CHANNEL_ID = -1001234567890;
 let nextId = 800_000;
@@ -32,34 +33,51 @@ function jsonUpload(fileId: string): TgUpdate {
   };
 }
 
-/** Upload research → render → approve; returns the app with a post preview waiting. */
-async function approvedResearch() {
+const tick = (app: ReturnType<typeof makeApp>["app"], minute: number) =>
+  app.scheduled({ scheduledTime: Date.parse(`2026-10-03T12:${String(minute).padStart(2, "0")}:00Z`) }, env);
+
+/** Upload research → render PDF → approve → render cover; returns the app with a post preview waiting. */
+async function approvedResearch(renderImage = fakeImageRenderer()) {
   const tg = fakeTelegram({ "documents/r.json": JSON.stringify(fixture) });
-  const { app } = makeApp(tg);
+  const { app } = makeApp(tg, undefined, undefined, renderImage);
   await postUpdate(app, jsonUpload("r"));
-  await app.scheduled({ scheduledTime: Date.parse("2026-10-03T12:01:00Z") }, env);
+  await tick(app, 1);
   const item = await env.DB.prepare("SELECT id FROM research_items").first<{ id: number }>();
   await postUpdate(app, callbackUpdate(ADMIN_ID, `rp:a:${item!.id}`));
-  const post = await env.DB.prepare("SELECT id, status, text, funnel_id FROM content_items").first<{ id: number; status: string; text: string; funnel_id: number }>();
-  return { app, tg, post: post! };
+  await tick(app, 2);
+  const post = await env.DB.prepare("SELECT id, status, text, funnel_id, media FROM content_items").first<{
+    id: number; status: string; text: string; funnel_id: number; media: string | null;
+  }>();
+  return { app, tg, post: post!, renderImage };
 }
 
 const postStatus = (id: number) =>
   env.DB.prepare("SELECT status, channel_message_id FROM content_items WHERE id = ?").bind(id).first<{ status: string; channel_message_id: number | null }>();
 
 describe("channel post", () => {
-  it("approving research drafts a post with the budget teaser and a deep-link button to the PDF", async () => {
-    const { tg, post } = await approvedResearch();
+  it("approving research drafts a post: bold hook, organizer figures, budget, CTA, branded cover and a deep-link button", async () => {
+    const { tg, post, renderImage } = await approvedResearch();
     expect(post.status).toBe("PREVIEW");
-    expect(post.text).toContain("Canton Fair");
-    expect(post.text).toContain("$3 480");
-    expect(post.text).toContain("viza bilan bog'liq xarajatlar kirmagan");
-    expect(post.text.length).toBeLessThanOrEqual(1024);
+    expect(post.text.startsWith("<b>📣 Tadbirkorlar diqqatiga!</b>")).toBe(true);
+    expect(post.text).toContain("<b>Canton Fair 2027</b>");
+    expect(post.text).toContain("2025-yil ko'rsatkichlari");
+    expect(post.text).toContain("~$3 480");
+    expect(post.text).toContain("viza bilan bog'liq xarajatlar bundan tashqari");
+    expect(post.text).toContain("Tayyor hisob-kitobni PDF'da oling");
+    expect(post.text).not.toContain("Ro'yxatdan o'tish:"); // the deadline is UNKNOWN in the fixture
+    expect(visibleLength(post.text)).toBeLessThanOrEqual(1024);
+
+    expect(renderImage.rendered[0]).toMatchObject({ width: 1280, height: 720 });
+    expect(renderImage.rendered[0]!.html).toContain("Canton Fair 2027");
+    expect(renderImage.rendered[0]!.html).toContain("~$3 480");
+    expect(JSON.parse(post.media!).r2_key).toBe(`posts/${post.id}.png`);
+    expect(await env.FILES.get(`posts/${post.id}.png`)).not.toBeNull();
 
     const funnel = await env.DB.prepare("SELECT code, content_item_id FROM funnels WHERE id = ?").bind(post.funnel_id).first<{ code: string; content_item_id: number }>();
     expect(funnel!.content_item_id).toBe(post.id);
-    const preview = tg.calls.filter((c) => c.method === "sendMessage" && c.params.text === post.text).at(-1)!;
-    const rows = (preview.params.reply_markup as { inline_keyboard: { text: string; url?: string; callback_data?: string }[][] }).inline_keyboard;
+    const preview = tg.calls.filter((c) => c.method === "sendPhoto").at(-1)!;
+    expect(preview.params.caption).toBe(post.text);
+    const rows = (JSON.parse(String(preview.params.reply_markup)) as { inline_keyboard: { text: string; url?: string; callback_data?: string }[][] }).inline_keyboard;
     expect(rows[0]![0]).toEqual({ text: "✈️ Tayyor hisob-kitobni olish", url: `https://t.me/test_bot?start=${funnel!.code}` });
     expect(rows[1]!.map((b) => b.callback_data)).toEqual([`pp:p:${post.id}`, `pp:e:${post.id}`]);
   });
@@ -84,9 +102,11 @@ describe("channel post", () => {
     await postUpdate(app, channelMember(ADMIN_ID, "administrator"));
     await postUpdate(app, callbackUpdate(ADMIN_ID, `pp:p:${post.id}`));
     await postUpdate(app, callbackUpdate(ADMIN_ID, `pp:p:${post.id}`));
-    const published = tg.calls.filter((c) => c.method === "sendMessage" && c.params.chat_id === CHANNEL_ID);
+    const published = tg.calls.filter((c) => c.params.chat_id === CHANNEL_ID);
     expect(published).toHaveLength(1);
-    expect(published[0]!.params.text).toBe(post.text);
+    expect(published[0]!.method).toBe("sendPhoto");
+    expect(published[0]!.params.photo).toBe(JSON.parse(post.media!).photo_file_id);
+    expect(published[0]!.params.caption).toBe(post.text);
     expect(JSON.stringify(published[0]!.params.reply_markup)).toContain("start=");
     expect(JSON.stringify(published[0]!.params.reply_markup)).not.toContain("pp:");
     const status = await postStatus(post.id);
@@ -101,7 +121,13 @@ describe("channel post", () => {
     await postUpdate(app, messageUpdate(ADMIN_ID, "Yangi matn <b>test</b>"));
     const edited = await env.DB.prepare("SELECT text FROM content_items WHERE id = ?").bind(post.id).first<{ text: string }>();
     expect(edited!.text).toBe("Yangi matn &lt;b&gt;test&lt;/b&gt;");
-    expect(tg.calls.at(-1)!.params.text).toBe(edited!.text);
+    expect(tg.calls.at(-1)).toMatchObject({ method: "sendPhoto", params: { caption: edited!.text } });
+
+    // Too long for a caption: refused, still waiting for a shorter text.
+    await postUpdate(app, callbackUpdate(ADMIN_ID, `pp:e:${post.id}`));
+    await postUpdate(app, messageUpdate(ADMIN_ID, "x".repeat(1100)));
+    expect(String(tg.calls.at(-1)!.params.text)).toContain("длиннее 1024");
+    await postUpdate(app, messageUpdate(ADMIN_ID, "Yangi matn <b>test</b>"));
 
     // The next admin message is ordinary again.
     await postUpdate(app, messageUpdate(ADMIN_ID, "hello"));
@@ -121,9 +147,33 @@ describe("channel post", () => {
     expect((await env.DB.prepare("SELECT COUNT(*) AS n FROM content_items").first<{ n: number }>())!.n).toBe(1);
 
     await postUpdate(app, callbackUpdate(ADMIN_ID, `pp:n:${magnet!.id}`));
+    await tick(app, 3);
     const posts = await env.DB.prepare("SELECT funnel_id FROM content_items ORDER BY id").all<{ funnel_id: number }>();
     expect(posts.results).toHaveLength(2);
     expect(new Set(posts.results.map((p) => p.funnel_id)).size).toBe(2);
+  });
+
+  it("if the cover cannot be rendered, the post still comes as a text preview after the last attempt", async () => {
+    const failing = Object.assign(async () => {
+      throw new Error("browser down");
+    }, { rendered: [] }) as unknown as ReturnType<typeof fakeImageRenderer>;
+    const { app, tg, post } = await approvedResearch(failing);
+    expect(post.status).toBe("DRAFT");
+    await tick(app, 5);
+    await tick(app, 8);
+    const after = await env.DB.prepare("SELECT status, media FROM content_items WHERE id = ?").bind(post.id).first();
+    expect(after).toEqual({ status: "PREVIEW", media: null });
+    expect(tg.calls.at(-1)).toMatchObject({ method: "sendMessage", params: { text: post.text } });
+  });
+
+  it("caption stays within 1024 characters even with long research texts", async () => {
+    const long = structuredClone(fixture) as typeof fixture;
+    long.exhibition.relevance = long.exhibition.relevance.map((r) => r.repeat(4));
+    const { buildPostText } = await import("../src/bot/posts");
+    const text = buildPostText({ title: "x" } as never, long as never);
+    expect(visibleLength(text)).toBeLessThanOrEqual(1024);
+    expect(text).toContain("~$3 480");
+    expect(text).toContain("Tayyor hisob-kitobni PDF'da oling");
   });
 
   it("losing admin rights in the channel disconnects it", async () => {
