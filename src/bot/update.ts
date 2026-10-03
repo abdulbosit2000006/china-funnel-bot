@@ -4,6 +4,7 @@ import type { TgCallbackQuery, TgMessage, TgUpdate } from "../telegram/types";
 import { ADMIN_CALLBACK_PREFIX, handleAdminCallback, sendAdminMenu } from "./admin";
 import { CTA_CALLBACK_PREFIX, deliverLeadMagnet, handleCtaClick } from "./funnel";
 import { MAGNET_CALLBACK_PREFIX, handleAdminUpload, handleMagnetCallback } from "./magnets";
+import { POST_CALLBACK_PREFIX, handleChannelMembership, handlePostCallback, handlePostEditText } from "./posts";
 import { RESEARCH_CALLBACK_PREFIX, handleResearchCallback, handleResearchUpload, isResearchFile } from "./research";
 import { template } from "./templates";
 
@@ -28,6 +29,9 @@ export function parseStart(text: string): { isStart: boolean; payload: string | 
 export async function handleUpdate(update: TgUpdate, ctx: BotContext): Promise<void> {
   if (update.message) return handleMessage(update.message, ctx);
   if (update.callback_query) return handleCallback(update.callback_query, ctx);
+  if (update.my_chat_member?.chat.type === "channel") {
+    return handleChannelMembership(ctx.tg, ctx.db, update.my_chat_member, ctx.admins);
+  }
   if (update.my_chat_member && update.my_chat_member.chat.type === "private") {
     const status = update.my_chat_member.new_chat_member.status;
     const blocked = status === "kicked";
@@ -75,13 +79,14 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
   if (isAdmin && message.document && isResearchFile(message)) return handleResearchUpload(ctx.tg, ctx.db, message, ctx.now);
   if (isAdmin && message.document) return handleAdminUpload(ctx.tg, ctx.db, ctx.files, message, ctx.now);
   if (isAdmin && /^\/admin(?:@\w+)?\s*$/.test(text.trim())) return sendAdminMenu(ctx.tg, message.chat.id);
+  if (isAdmin && text && !text.startsWith("/") && (await handlePostEditText(ctx.tg, ctx.db, from.id, message.chat.id, text))) return;
   await sendMessage(ctx.tg, message.chat.id, await template(ctx.db, "fallback"));
 }
 
 async function handleCallback(callback: TgCallbackQuery, ctx: BotContext): Promise<void> {
   const data = callback.data ?? "";
   const message = callback.message;
-  const isAdminAction = [ADMIN_CALLBACK_PREFIX, MAGNET_CALLBACK_PREFIX, RESEARCH_CALLBACK_PREFIX].some((p) => data.startsWith(p));
+  const isAdminAction = [ADMIN_CALLBACK_PREFIX, MAGNET_CALLBACK_PREFIX, RESEARCH_CALLBACK_PREFIX, POST_CALLBACK_PREFIX].some((p) => data.startsWith(p));
   if (isAdminAction) {
     // Hidden buttons are not a security boundary: every admin action is re-checked here.
     if (!ctx.admins.has(callback.from.id) || !message) {
@@ -97,6 +102,7 @@ async function handleCallback(callback: TgCallbackQuery, ctx: BotContext): Promi
     };
     if (data.startsWith(MAGNET_CALLBACK_PREFIX)) return handleMagnetCallback(ctx.tg, ctx.db, target, ctx.now);
     if (data.startsWith(RESEARCH_CALLBACK_PREFIX)) return handleResearchCallback(ctx.tg, ctx.db, target, ctx.now);
+    if (data.startsWith(POST_CALLBACK_PREFIX)) return handlePostCallback(ctx.tg, ctx.db, target, ctx.now);
     return handleAdminCallback(ctx.tg, ctx.db, target, ctx.now);
   }
   if (data.startsWith(CTA_CALLBACK_PREFIX)) {
