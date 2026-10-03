@@ -8,8 +8,9 @@ Telegram-воронка для предпринимателей из Узбек�
 
 - Архитектура: [docs/architecture-cloudflare-v2.md](docs/architecture-cloudflare-v2.md) (исходный аудит: [docs/audit-v1.md](docs/audit-v1.md))
 - Запуск на Cloudflare по шагам: [docs/setup-cloudflare.md](docs/setup-cloudflare.md)
+- Как пользоваться админкой: [docs/admin-guide.md](docs/admin-guide.md)
 
-## Статус: Phase 1 (webhook-скелет)
+## Статус: Phase 2 (библиотека PDF и кампании)
 
 | Что | Готово |
 |---|---|
@@ -19,7 +20,8 @@ Telegram-воронка для предпринимателей из Узбек�
 | `/admin/setup`: webhook + команды для клиентов и админа | ✅ |
 | Cron раз в минуту (пока: очистка дедупа) | ✅ |
 | Полная схема БД MVP (`migrations/0001_init.sql`) | ✅ |
-| PDF-библиотека и выдача по кампании | Phase 2 |
+| PDF-библиотека: админ присылает PDF с подписью `slug \| Название`, оригинал в R2, версии, активация | ✅ |
+| Кампании: ссылка `t.me/<bot>?start=<код>` для поста, выдача PDF по `file_id` + кнопка «Muhokama qilmoqchiman» → уведомление админу | ✅ |
 | Follow-up, квалификация, уведомление о лиде | Phase 3 |
 | Превью → APPROVE → публикация в канал | Phase 4 |
 | Статистика воронки | Phase 5 |

@@ -15,6 +15,8 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Lead magnet PDFs and images (create the bucket once: docs/setup-cloudflare.md, step 3b).
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "china-funnel-files" }],
   "vars": {
     "TIMEZONE": "Asia/Tashkent"
   }

@@ -1,4 +1,4 @@
-import { claimUpdate, deleteOldUpdates } from "./db";
+import { claimUpdate, deleteOldUpdates, putSetting } from "./db";
 import { handleUpdate } from "./bot/update";
 import { parseAdminIds, type Env } from "./env";
 import { log } from "./log";
@@ -55,6 +55,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
       }
       await handleUpdate(update, {
         db: env.DB,
+        files: env.FILES,
         tg: deps.telegram(env),
         admins: parseAdminIds(env.ADMIN_TG_IDS),
         now,
@@ -89,6 +90,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
       });
     }
     const me = await tg.call<{ username: string }>("getMe", {});
+    await putSetting(env.DB, "bot.username", me.username);
     log.info("setup.done", { url, admins: admins.length });
     return Response.json({ ok: true, webhook: url, bot: me.username, admins: admins.length });
   }

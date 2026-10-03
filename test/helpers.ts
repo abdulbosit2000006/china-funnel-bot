@@ -18,7 +18,12 @@ export function fakeTelegram(): Telegram & { calls: Call[] } {
     async call<T>(method: string, params: Record<string, unknown>): Promise<T> {
       calls.push({ method, params });
       if (method === "getMe") return { username: "test_bot" } as T;
+      if (method === "getFile") return { file_path: `documents/${String(params.file_id)}.pdf` } as T;
       return true as T;
+    },
+    async downloadFile(filePath: string): Promise<ArrayBuffer> {
+      calls.push({ method: "downloadFile", params: { filePath } });
+      return new TextEncoder().encode(`%PDF-1.4 fake ${filePath}`).buffer as ArrayBuffer;
     },
   };
 }
