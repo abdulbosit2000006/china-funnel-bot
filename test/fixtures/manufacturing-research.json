@@ -1,0 +1,125 @@
+{
+  "slug": "paper-cup-line-sample",
+  "title": "Qog'oz stakan ishlab chiqarish: dastlabki biznes model",
+  "sample": true,
+  "research_date": "2026-10-03",
+  "currency": "USD",
+  "product": {
+    "name": "Qog'oz stakan ishlab chiqarish",
+    "tagline": "Bir martalik qog'oz stakanlar: kafe, choyxona va ofislar uchun mahalliy ishlab chiqarish",
+    "description": "Bir qatlamli qog'oz stakanlar (250 ml), ichki tomoni PE bilan qoplangan. Asosiy xaridorlar: kafe va kofe nuqtalari, fast-fud, ofislar, tadbir tashkilotchilari. Logotip bosilgan stakanlar alohida segment. TEST QIYMATLARI: shablonni ko'rsatish uchun.",
+    "unit": "dona"
+  },
+  "equipment": {
+    "name": "ZB-12 avtomatik qog'oz stakan liniyasi (test nomi)",
+    "manufacturer": { "value": "Test Machinery Co., Ltd (Ruian, Zhejiang)", "label": "ESTIMATED", "source": 1 },
+    "model": { "value": "ZB-12 (test)", "label": "ESTIMATED", "source": 1 },
+    "image_url": "https://www.example-machines.cn/images/zb-12-paper-cup.jpg",
+    "price": { "value": 38000, "label": "MARKET DATA", "source": 2, "note": "Marketplace e'lonidagi narx, rasmiy taklif emas" },
+    "capacity_per_hour": { "value": 5000, "label": "ESTIMATED", "source": 1, "note": "Ishlab chiqaruvchi: 80–90 dona/daqiqa" },
+    "power_kw": { "value": 15, "label": "ESTIMATED", "source": 1 },
+    "area_m2": { "value": 40, "label": "ESTIMATED", "source": 1 },
+    "operators": { "value": 2, "label": "ASSUMPTION", "source": null },
+    "weight": { "value": "taxminan 2,5 t", "label": "ESTIMATED", "source": 1 },
+    "automation": { "value": "To'liq avtomatik: qog'oz berish, payvandlash, tub qo'yish, sanash", "label": "ESTIMATED", "source": 1 },
+    "included": ["Asosiy mashina", "Bitta o'lcham uchun qolip (250 ml)", "Ehtiyot qismlar to'plami"],
+    "additional_equipment": ["Fleksografik bosma mashinasi (logotip uchun)", "Kesish (die-cut) pressi", "Havo kompressori"],
+    "installation": { "value": "Ishlab chiqaruvchi muhandisi orqali, 5–7 kun", "label": "ASSUMPTION", "source": null },
+    "lead_time": { "value": "30–45 kun ishlab chiqarish + 25–35 kun yetkazish", "label": "ESTIMATED", "source": 2 },
+    "warranty": { "value": "Noma'lum, sotuvchidan so'rash kerak", "label": "UNKNOWN", "source": null },
+    "raw_materials": [
+      { "name": "PE qoplangan stakan qog'ozi", "spec": "190–230 g/m², bir tomonlama PE", "price": { "value": "$1 300–1 500 / t", "label": "MARKET DATA", "source": 3 } },
+      { "name": "Bosma bo'yog'i", "spec": "Suv asosidagi, oziq-ovqat uchun ruxsat etilgan", "price": { "value": "Noma'lum", "label": "UNKNOWN", "source": null } }
+    ]
+  },
+  "highlights": [
+    "Kafe va kofe nuqtalari soni o'sib bormoqda: stakanga talab doimiy (TEST).",
+    "Bitta liniya 40 m² joyda, 2 operator bilan ishlaydi.",
+    "Logotipli stakanlar: mahalliy ishlab chiqaruvchi uchun tezkor buyurtmalar ustunligi."
+  ],
+  "post_stats": [
+    { "label": "quvvat", "value": "5 000 dona/soat", "source": 1 },
+    { "label": "joy", "value": "40 m²", "source": 1 }
+  ],
+  "market": {
+    "summary": "Qog'oz stakanlar asosan import qilinadi va bir nechta mahalliy ishlab chiqaruvchi bor. TEST MATNI: haqiqiy bozor tahlili emas.",
+    "selling_price_per_unit": { "value": 0.022, "label": "MARKET DATA", "source": 4, "note": "Ulgurji narx, 250 ml, logotipsiz" },
+    "wholesale_price": { "value": 0.03, "label": "MARKET DATA", "source": 4, "note": "Do'kondagi chakana narx (ma'lumot uchun)" },
+    "demand_indicators": [
+      { "value": "Kofe nuqtalari soni yildan-yilga oshmoqda (test)", "label": "ESTIMATED", "source": 5 }
+    ],
+    "competitors": [
+      { "name": "Mahalliy ishlab chiqaruvchi A (test)", "note": "Toshkent viloyati", "source": 4 },
+      { "name": "Xitoy va Qozog'istondan import", "note": "Narx bo'yicha asosiy raqobat", "source": null }
+    ],
+    "imports_local": { "value": "Importning ulushi katta, aniq statistika topilmadi", "label": "UNKNOWN", "source": null },
+    "customers": ["Kafe va kofe nuqtalari", "Fast-fud", "Ofislar va tadbirlar", "Ulgurji distribyutorlar"],
+    "distribution": "To'g'ridan-to'g'ri HoReCa mijozlariga va ulgurji bozorlar orqali.",
+    "risks": ["Import bilan narx raqobati", "Qog'oz narxi valyuta kursiga bog'liq"],
+    "limitations": ["Mahalliy bozor hajmi bo'yicha rasmiy statistika topilmadi"]
+  },
+  "capex": [
+    { "key": "machine", "title": "Qog'oz stakan liniyasi", "amount": 38000, "label": "MARKET DATA", "source": 2, "note": "FOB Xitoy, marketplace narxi" },
+    { "key": "shipping", "title": "Yetkazib berish Xitoy → Toshkent", "amount": 3000, "label": "ESTIMATED", "source": null },
+    { "key": "customs", "title": "Bojxona to'lovlari va QQS", "amount": 5600, "label": "ASSUMPTION", "source": null },
+    { "key": "install", "title": "O'rnatish va ishga tushirish", "amount": 1500, "label": "ESTIMATED", "source": null },
+    { "key": "working_capital", "title": "Aylanma mablag' (xomashyo zaxirasi)", "amount": 5000, "label": "ASSUMPTION", "source": null },
+    { "key": "renovation", "title": "Sexni tayyorlash (elektr, ta'mir)", "amount": null, "label": "UNKNOWN", "source": null }
+  ],
+  "opex_monthly": [
+    { "key": "rent", "title": "Sex ijarasi (80 m²)", "amount": 800, "label": "ESTIMATED", "source": null },
+    { "key": "salaries", "title": "Ish haqi (4 kishi, 2 smena)", "amount": 2400, "label": "ASSUMPTION", "source": null },
+    { "key": "maintenance", "title": "Texnik xizmat va ehtiyot qismlar", "amount": 200, "label": "ASSUMPTION", "source": null },
+    { "key": "other", "title": "Boshqa (aloqa, transport, buxgalteriya)", "amount": 300, "label": "ASSUMPTION", "source": null },
+    { "key": "certification", "title": "Sertifikatlash", "amount": null, "label": "UNKNOWN", "source": null }
+  ],
+  "variable_costs": [
+    { "key": "paper", "title": "Stakan qog'ozi", "amount": 0.012, "label": "MARKET DATA", "source": 3, "note": "≈ 8,5 g × $1 400/t" },
+    { "key": "ink", "title": "Bo'yoq va PE", "amount": 0.001, "label": "ESTIMATED", "source": null },
+    { "key": "packaging", "title": "Qadoqlash (karton quti, plyonka)", "amount": 0.0015, "label": "ESTIMATED", "source": null }
+  ],
+  "revenue_costs": [
+    { "key": "turnover_tax", "title": "Aylanmadan olinadigan soliq", "pct": 4, "label": "ASSUMPTION", "source": null, "note": "Soliq rejimini buxgalter bilan tekshiring" }
+  ],
+  "production": {
+    "hours_per_day": 16,
+    "shifts_per_day": 2,
+    "working_days_per_month": 25,
+    "utilization_base": 0.7,
+    "scrap_pct": 2,
+    "electricity_price_kwh": { "value": 0.08, "label": "ESTIMATED", "source": null, "note": "Yuridik shaxslar uchun tarif (test)" },
+    "label": "ASSUMPTION",
+    "source": null
+  },
+  "scenarios": [0.5, 0.7, 0.9],
+  "process": [
+    { "step": "Bosma", "text": "Qog'oz rulonga logotip bosiladi (ixtiyoriy)." },
+    { "step": "Kesish", "text": "Rulondan stakan devori uchun zagotovkalar kesiladi." },
+    { "step": "Shakllantirish", "text": "Mashina devorni payvandlaydi, tub qo'yadi va chetini buraydi." },
+    { "step": "Nazorat va qadoqlash", "text": "Brak ajratiladi, stakanlar 50 tadan qadoqlanadi." }
+  ],
+  "facility": [
+    { "title": "Maydon", "value": "Liniya uchun 40 m², ombor bilan jami 80 m²", "label": "ESTIMATED", "source": 1 },
+    { "title": "Elektr", "value": "380 V, 3 faza, kamida 20 kVt", "label": "ESTIMATED", "source": 1 },
+    { "title": "Siqilgan havo", "value": "Kompressor kerak bo'lishi mumkin", "label": "ASSUMPTION", "source": null }
+  ],
+  "risks": [
+    { "title": "Narx raqobati", "text": "Import stakanlar arzon bo'lishi mumkin; sotish narxi pasaysa, foyda tez kamayadi." },
+    { "title": "Xomashyo", "text": "Qog'oz importga bog'liq: narx va kurs o'zgarishi tannarxga ta'sir qiladi." },
+    { "title": "Sotuv hajmi", "text": "70% yuklama uchun oyiga 1,3 mln dona sotish kerak: oldindan xaridorlar bo'lishi muhim." }
+  ],
+  "verify_before_investment": [
+    "Ishlab chiqaruvchidan rasmiy taklif (quotation) va kafolat shartlari",
+    "Bojxona to'lovlarini broker bilan hisoblash",
+    "Qog'oz yetkazib beruvchilardan narx va minimal partiya",
+    "Kamida 3–5 ta potentsial xaridordan narx va hajm bo'yicha tasdiq",
+    "Sertifikatlash talablari va muddati"
+  ],
+  "sources": [
+    { "id": 1, "title": "Ishlab chiqaruvchi sahifasi (test)", "url": "https://www.example-machines.cn/zb-12", "type": "MANUFACTURER", "retrieved_at": "2026-10-03" },
+    { "id": 2, "title": "Marketplace e'loni (test)", "url": "https://www.example-marketplace.com/item/zb-12", "type": "MARKETPLACE", "retrieved_at": "2026-10-03" },
+    { "id": 3, "title": "Stakan qog'ozi narxi (test)", "url": "https://www.example-marketplace.com/item/cup-paper", "type": "MARKETPLACE", "retrieved_at": "2026-10-03" },
+    { "id": 4, "title": "O'zbekiston ulgurji narxlari (test)", "url": "https://www.example-uz-market.uz/paper-cups", "type": "MARKETPLACE", "retrieved_at": "2026-10-03" },
+    { "id": 5, "title": "Soha sharhi (test)", "url": "https://www.example-news.uz/coffee-market", "type": "SECONDARY", "retrieved_at": "2026-10-03" }
+  ]
+}
