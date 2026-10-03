@@ -29,7 +29,8 @@ export const adminTexts = {
   uploadHelp:
     "📄 <b>Как загрузить PDF</b>\n\nОтправьте боту PDF-файл с подписью:\n" +
     "<code>slug | Название</code>\n\nНапример:\n<code>canton-fair-2027 | Canton Fair 2027: hisob-kitob</code>\n\n" +
-    "slug: латиница, цифры и дефис (2–40 символов). Новый файл с тем же slug становится новой версией.",
+    "slug: латиница, цифры и дефис (2–40 символов). Новый файл с тем же slug становится новой версией.\n\n" +
+    "🤖 <b>Автоматический PDF</b>: отправьте research-пакет (.json) — бот сам посчитает бюджет, соберёт PDF по шаблону и пришлёт на одобрение.",
   badCaption:
     "Не понял подпись. Нужно так:\n<code>slug | Название</code>\nНапример: <code>paper-cup | Qog'oz stakan ishlab chiqarish</code>",
   notPdf: "Это не PDF. Отправьте файл в формате PDF.",

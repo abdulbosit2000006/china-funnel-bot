@@ -17,6 +17,8 @@
   ],
   // Lead magnet PDFs and images (create the bucket once: docs/setup-cloudflare.md, step 3b).
   "r2_buckets": [{ "binding": "FILES", "bucket_name": "china-funnel-files" }],
+  // Headless Chromium for HTML -> PDF (Free plan: 10 browser-minutes per day).
+  "browser": { "binding": "BROWSER" },
   "vars": {
     "TIMEZONE": "Asia/Tashkent"
   }

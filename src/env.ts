@@ -1,6 +1,7 @@
 export interface Env {
   DB: D1Database;
   FILES: R2Bucket;
+  BROWSER: Fetcher;
   TIMEZONE: string;
   // Secrets (wrangler secret put / Cloudflare dashboard). Never committed.
   TELEGRAM_BOT_TOKEN: string;

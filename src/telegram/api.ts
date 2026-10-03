@@ -15,21 +15,25 @@ export interface Telegram {
   call<T = unknown>(method: string, params: Record<string, unknown>): Promise<T>;
   /** Downloads a file by the file_path returned from getFile (Bot API limit: 20 MB). */
   downloadFile(filePath: string): Promise<ArrayBuffer>;
+  /** Multipart call for sending a new file (sendDocument with bytes instead of a file_id). */
+  upload<T = unknown>(method: string, form: FormData): Promise<T>;
 }
 
 export function createTelegram(token: string, fetchImpl: typeof fetch = fetch): Telegram {
+  async function send<T>(method: string, init: RequestInit): Promise<T> {
+    const response = await fetchImpl(`https://api.telegram.org/bot${token}/${method}`, { method: "POST", ...init });
+    const body = (await response.json()) as { ok: boolean; result?: T; error_code?: number; description?: string };
+    if (!body.ok) {
+      throw new TelegramError(method, body.error_code ?? response.status, body.description ?? "unknown");
+    }
+    return body.result as T;
+  }
   return {
-    async call<T>(method: string, params: Record<string, unknown>): Promise<T> {
-      const response = await fetchImpl(`https://api.telegram.org/bot${token}/${method}`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(params),
-      });
-      const body = (await response.json()) as { ok: boolean; result?: T; error_code?: number; description?: string };
-      if (!body.ok) {
-        throw new TelegramError(method, body.error_code ?? response.status, body.description ?? "unknown");
-      }
-      return body.result as T;
+    call<T>(method: string, params: Record<string, unknown>): Promise<T> {
+      return send<T>(method, { headers: { "content-type": "application/json" }, body: JSON.stringify(params) });
+    },
+    upload<T>(method: string, form: FormData): Promise<T> {
+      return send<T>(method, { body: form });
     },
     async downloadFile(filePath: string): Promise<ArrayBuffer> {
       const response = await fetchImpl(`https://api.telegram.org/file/bot${token}/${filePath}`);

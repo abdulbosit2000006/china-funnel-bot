@@ -1,7 +1,10 @@
+import { RENDER_JOB, runRenderJob } from "./bot/research";
 import { claimUpdate, deleteOldUpdates, putSetting } from "./db";
+import { claimJob, failJob, finishJob } from "./jobs";
 import { handleUpdate } from "./bot/update";
 import { parseAdminIds, type Env } from "./env";
 import { log } from "./log";
+import { createBrowserRenderer, type PdfRenderer } from "./pdf/render";
 import { createTelegram, type Telegram } from "./telegram/api";
 import type { TgUpdate } from "./telegram/types";
 
@@ -10,11 +13,13 @@ const ALLOWED_UPDATES = ["message", "callback_query", "my_chat_member"];
 
 export interface AppDeps {
   telegram: (env: Env) => Telegram;
+  renderPdf: (env: Env) => PdfRenderer;
   now: () => Date;
 }
 
 const defaultDeps: AppDeps = {
   telegram: (env) => createTelegram(env.TELEGRAM_BOT_TOKEN),
+  renderPdf: (env) => createBrowserRenderer(env.BROWSER),
   now: () => new Date(),
 };
 
@@ -95,6 +100,28 @@ export function createApp(deps: AppDeps = defaultDeps) {
     return Response.json({ ok: true, webhook: url, bot: me.username, admins: admins.length });
   }
 
+  /** One job per tick: the Free plan allows 2 new browsers per minute, and a render takes a while. */
+  async function runJobs(env: Env, now: Date): Promise<void> {
+    const job = await claimJob(env.DB, now);
+    if (!job) return;
+    const tg = deps.telegram(env);
+    const payload = JSON.parse(job.payload) as { researchId: number; chatId: number };
+    try {
+      if (job.kind === RENDER_JOB) {
+        await runRenderJob({ tg, db: env.DB, files: env.FILES, renderPdf: deps.renderPdf(env), now }, payload);
+      }
+      await finishJob(env.DB, job.id);
+      log.info("job.done", { id: job.id, kind: job.kind, attempts: job.attempts });
+    } catch (error) {
+      log.error("job.failed", error, { id: job.id, kind: job.kind, attempts: job.attempts });
+      if (await failJob(env.DB, job, error, now)) {
+        await tg
+          .call("sendMessage", { chat_id: payload.chatId, text: `⚠️ Не удалось создать PDF после ${job.attempts} попыток. Ошибка записана в логи.` })
+          .catch(() => undefined);
+      }
+    }
+  }
+
   return {
     async fetch(request: Request, env: Env): Promise<Response> {
       const { pathname } = new URL(request.url);
@@ -110,6 +137,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
     async scheduled(controller: { scheduledTime: number }, env: Env): Promise<void> {
       const now = new Date(controller.scheduledTime);
       // Phase 3 adds follow-up delivery here (every minute).
+      await runJobs(env, now);
       if (now.getUTCMinutes() === 0) {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
         const removed = await deleteOldUpdates(env.DB, weekAgo);
