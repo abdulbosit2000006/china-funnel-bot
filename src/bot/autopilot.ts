@@ -14,6 +14,7 @@ import { specByResearchKind, type Subject } from "./subjects";
 export const AUTOPILOT_JOB = "AUTOPILOT_DELIVER";
 export const AUTOPILOT_ENABLED = "autopilot.enabled";
 export const AUTOPILOT_PLAN = "autopilot.plan";
+const LAST_START = "autopilot.last_start";
 /** Research starts after this local hour so it is ready by the delivery hour. */
 const START_HOUR = 1;
 export const DELIVERY_HOUR = 9;
@@ -50,8 +51,10 @@ export async function runAutopilot(ctx: Ctx): Promise<void> {
 
   if (local.hour >= START_HOUR && (await autopilotEnabled(ctx.db))) {
     const subject = (await autopilotPlan(ctx.db))[String(local.weekday)];
-    const started = await ctx.db.prepare("SELECT 1 AS x FROM ai_runs WHERE auto_date = ? LIMIT 1").bind(local.date).first();
+    // One attempt per day, even if it is refused (e.g. the daily AI limit): no retry loop every minute.
+    const started = (await getSetting<string>(ctx.db, LAST_START)) === local.date;
     if (subject && !started) {
+      await putSetting(ctx.db, LAST_START, local.date);
       const ok = await queueAutopilotRun(ctx.tg, ctx.db, ctx.ai, owner, subject, local.date, ctx.now);
       log.info("autopilot.start", { date: local.date, subject, ok });
     }

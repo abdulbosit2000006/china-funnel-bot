@@ -124,3 +124,16 @@ describe("business model funnel", () => {
     expect(String(preview.params.reply_markup)).toContain("📊 Biznes hisob-kitobini olish");
   });
 });
+
+describe("autopilot limits", () => {
+  it("a refused start (daily AI limit) is tried once a day, not every minute", async () => {
+    const tg = fakeTelegram();
+    const ai = fakeAi();
+    await env.DB.prepare("INSERT INTO settings (key, value) VALUES ('ai.daily_limit', '0')").run();
+    const { app } = makeApp(tg, new Date("2026-10-04T20:00:00Z"), undefined, undefined, undefined, ai);
+    await app.scheduled(at("2026-10-04T20:00:00Z"), env);
+    await app.scheduled(at("2026-10-04T20:01:00Z"), env);
+    await app.scheduled(at("2026-10-04T20:02:00Z"), env);
+    expect(tg.calls.filter((c) => String(c.params.text ?? "").includes("Дневной лимит"))).toHaveLength(1);
+  });
+});

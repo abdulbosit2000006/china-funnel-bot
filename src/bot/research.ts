@@ -11,6 +11,7 @@ import { hasSubject, specByResearchKind, subjectSpec, type Researched, type Subj
 export const RESEARCH_CALLBACK_PREFIX = "rp:";
 export const RENDER_JOB = "RENDER_EXHIBITION_PDF";
 const MAX_JSON_BYTES = 1024 * 1024;
+const MAX_PDF_IMAGE_BYTES = 1024 * 1024;
 
 export interface ResearchRow {
   id: number;
@@ -92,7 +93,8 @@ ${spec.summary(data)}`);
 async function pdfImage(fetchUrl: typeof fetch | undefined, url: string | undefined): Promise<string | null> {
   if (!fetchUrl || !url) return null;
   const image = await fetchPoster(fetchUrl, url);
-  if (!image) return null;
+  // Base64 costs CPU time in the Worker; a large photo is not worth it, the PDF just goes without it.
+  if (!image || image.bytes.byteLength > MAX_PDF_IMAGE_BYTES) return null;
   let binary = "";
   for (let i = 0; i < image.bytes.length; i += 0x8000) binary += String.fromCharCode(...image.bytes.subarray(i, i + 0x8000));
   return `data:${image.type};base64,${btoa(binary)}`;
