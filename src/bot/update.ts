@@ -8,6 +8,7 @@ import { CTA_CALLBACK_PREFIX, deliverLeadMagnet, handleCtaClick } from "./funnel
 import { MAGNET_CALLBACK_PREFIX, handleAdminUpload, handleMagnetCallback } from "./magnets";
 import { POST_CALLBACK_PREFIX, handleChannelMembership, handlePostCallback, handlePostEditText, handlePostPhoto } from "./posts";
 import { RESEARCH_CALLBACK_PREFIX, handleResearchCallback, handleResearchUpload, isResearchFile } from "./research";
+import { FOLLOWUP_CALLBACK_PREFIX, LEAD_CALLBACK_PREFIX, QUAL_CALLBACK_PREFIX, handleClientText, handleFollowupAnswer, handleLeadAction, handleQualAnswer } from "./leads";
 import { template } from "./templates";
 
 export interface BotContext {
@@ -78,7 +79,7 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
     return;
   }
 
-  await upsertUser(ctx.db, from, now, null);
+  const { user } = await upsertUser(ctx.db, from, now, null);
   if (isAdmin && message.document && isResearchFile(message)) return handleResearchUpload(ctx.tg, ctx.db, message, ctx.now);
   if (isAdmin && message.document) return handleAdminUpload(ctx.tg, ctx.db, ctx.files, message, ctx.now);
   if (isAdmin && message.photo?.length && (await handlePostPhoto(ctx.tg, ctx.db, ctx.files, from.id, message.chat.id, message.photo))) return;
@@ -91,13 +92,14 @@ async function handleMessage(message: TgMessage, ctx: BotContext): Promise<void>
     return requestResearch(ctx.tg, ctx.db, ctx.ai, message.chat.id, from.id, research[1].trim().slice(0, 200), ctx.now);
   }
   if (isAdmin && text && !text.startsWith("/") && (await handlePostEditText(ctx.tg, ctx.db, from.id, message.chat.id, text))) return;
+  if (text && !text.startsWith("/") && (await handleClientText(ctx, message.chat.id, user, text))) return;
   await sendMessage(ctx.tg, message.chat.id, await template(ctx.db, "fallback"));
 }
 
 async function handleCallback(callback: TgCallbackQuery, ctx: BotContext): Promise<void> {
   const data = callback.data ?? "";
   const message = callback.message;
-  const isAdminAction = [ADMIN_CALLBACK_PREFIX, MAGNET_CALLBACK_PREFIX, RESEARCH_CALLBACK_PREFIX, POST_CALLBACK_PREFIX, AI_CALLBACK_PREFIX].some((p) => data.startsWith(p));
+  const isAdminAction = [ADMIN_CALLBACK_PREFIX, MAGNET_CALLBACK_PREFIX, RESEARCH_CALLBACK_PREFIX, POST_CALLBACK_PREFIX, AI_CALLBACK_PREFIX, LEAD_CALLBACK_PREFIX].some((p) => data.startsWith(p));
   if (isAdminAction) {
     // Hidden buttons are not a security boundary: every admin action is re-checked here.
     if (!ctx.admins.has(callback.from.id) || !message) {
@@ -114,8 +116,14 @@ async function handleCallback(callback: TgCallbackQuery, ctx: BotContext): Promi
     if (data.startsWith(MAGNET_CALLBACK_PREFIX)) return handleMagnetCallback(ctx.tg, ctx.db, target, ctx.now);
     if (data.startsWith(RESEARCH_CALLBACK_PREFIX)) return handleResearchCallback(ctx.tg, ctx.db, target, ctx.now);
     if (data.startsWith(POST_CALLBACK_PREFIX)) return handlePostCallback(ctx.tg, ctx.db, target, ctx.now);
+    if (data.startsWith(LEAD_CALLBACK_PREFIX)) return handleLeadAction(ctx, target);
     if (data.startsWith(AI_CALLBACK_PREFIX)) return handleAiCallback(ctx.tg, ctx.db, ctx.ai, target, ctx.now);
     return handleAdminCallback(ctx.tg, ctx.db, target, ctx.now);
+  }
+  if (message && (data.startsWith(FOLLOWUP_CALLBACK_PREFIX) || data.startsWith(QUAL_CALLBACK_PREFIX))) {
+    const { user } = await upsertUser(ctx.db, callback.from, ctx.now.toISOString(), null);
+    const target = { id: callback.id, chatId: message.chat.id, messageId: message.message_id, data };
+    return data.startsWith(QUAL_CALLBACK_PREFIX) ? handleQualAnswer(ctx, target, user) : handleFollowupAnswer(ctx, target, user);
   }
   if (data.startsWith(CTA_CALLBACK_PREFIX)) {
     const { user } = await upsertUser(ctx.db, callback.from, ctx.now.toISOString(), null);

@@ -1,4 +1,5 @@
 import { runAiTick } from "./bot/ai";
+import { runFollowups } from "./bot/leads";
 import { POST_CARD_JOB, postPreviewWithoutPhoto, runPostCardJob } from "./bot/posts";
 import { createOpenAI, type AiClient } from "./ai/openai";
 import { RENDER_JOB, runRenderJob } from "./bot/research";
@@ -157,7 +158,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
 
     async scheduled(controller: { scheduledTime: number }, env: Env): Promise<void> {
       const now = new Date(controller.scheduledTime);
-      // Phase 3 adds follow-up delivery here (every minute).
+      await runFollowups({ db: env.DB, tg: deps.telegram(env), now }).catch((e) => log.error("followups.failed", e));
       await runAiTick({ tg: deps.telegram(env), db: env.DB, ai: (deps.ai ?? defaultAi)(env) }, now).catch((e) => log.error("ai.tick_failed", e));
       await runJobs(env, now);
       if (now.getUTCMinutes() === 0) {

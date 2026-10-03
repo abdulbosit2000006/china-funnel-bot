@@ -18,6 +18,17 @@ export const clientTexts = {
   ctaButton: "🤝 Muhokama qilmoqchiman",
   ctaThanks: "Rahmat! So'rovingiz mutaxassisga yuborildi. Tez orada siz bilan bog'lanamiz.",
   ctaAlready: "So'rovingiz allaqachon qabul qilingan. Tez orada bog'lanamiz.",
+  followup:
+    "Hisob-kitobni ko'rib chiqishga ulgurdingizmi? 🙂\n\n" +
+    "Agar bu loyihani yoki safarni jiddiy ko'rib chiqayotgan bo'lsangiz, so'rovingizni mutaxassisga topshirishim mumkin.",
+  followupYes: "✅ Qiziqaman",
+  followupQuestion: "❓ Savolim bor",
+  followupNo: "⏸ Hozir emas",
+  followupNoReply: "Tushunarli! Kanalimizda yangi foydali materiallar chiqib turadi. Kerak bo'lsa, shu yerga yozing.",
+  questionAsk: "Savolingizni shu yerga bitta xabarda yozing, mutaxassisga yetkazaman.",
+  questionThanks: "Rahmat! Savolingiz mutaxassisga yuborildi, tez orada javob beramiz.",
+  qualIntro: "Ajoyib! Sizga aniq yordam berishimiz uchun bir nechta qisqa savol (tugmani bosish kifoya):",
+  qualDone: "Rahmat! Ma'lumotlar mutaxassisga yuborildi. Tez orada siz bilan bog'lanamiz. 🤝",
 };
 
 export type ClientTemplate = keyof typeof clientTexts;
