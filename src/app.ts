@@ -10,7 +10,7 @@ import { RENDER_JOB, runRenderJob } from "./bot/research";
 import { claimUpdate, deleteOldUpdates, putSetting } from "./db";
 import { claimJob, failJob, finishJob } from "./jobs";
 import { handleUpdate } from "./bot/update";
-import { parseAdminIds, type Env } from "./env";
+import { parseAdminIds, systemActive, type Env } from "./env";
 import { log } from "./log";
 import { createBrowserImageRenderer, createBrowserRenderer, type ImageRenderer, type PdfRenderer } from "./pdf/render";
 import { createTelegram, type Telegram } from "./telegram/api";
@@ -58,6 +58,9 @@ async function isAuthorizedAdminApi(request: Request, env: Env): Promise<boolean
 }
 
 export function createApp(deps: AppDeps = defaultDeps) {
+  // While paused there is no AI client at all, so nothing in the bot can reach OpenAI.
+  const aiFor = (env: Env): AiClient | null => (systemActive(env) ? (deps.ai ?? defaultAi)(env) : null);
+
   async function webhook(request: Request, env: Env): Promise<Response> {
     const secret = request.headers.get("x-telegram-bot-api-secret-token") ?? "";
     if (!env.TELEGRAM_WEBHOOK_SECRET || !(await safeEqual(secret, env.TELEGRAM_WEBHOOK_SECRET))) {
@@ -80,7 +83,7 @@ export function createApp(deps: AppDeps = defaultDeps) {
         db: env.DB,
         files: env.FILES,
         tg: deps.telegram(env),
-        ai: (deps.ai ?? defaultAi)(env),
+        ai: aiFor(env),
         admins: parseAdminIds(env.ADMIN_TG_IDS),
         timeZone: env.TIMEZONE || "Asia/Tashkent",
         now,
@@ -177,16 +180,19 @@ export function createApp(deps: AppDeps = defaultDeps) {
 
     async scheduled(controller: { scheduledTime: number }, env: Env): Promise<void> {
       const now = new Date(controller.scheduledTime);
-      const ai = (deps.ai ?? defaultAi)(env);
+      const ai = aiFor(env);
       const admins = parseAdminIds(env.ADMIN_TG_IDS);
       const timeZone = env.TIMEZONE || "Asia/Tashkent";
+      // Follow-ups to clients use no AI and keep running while paused.
       await runFollowups({ db: env.DB, tg: deps.telegram(env), now }).catch((e) => log.error("followups.failed", e));
-      await runDailyReport({ db: env.DB, tg: deps.telegram(env), admins, now, timeZone })
-        .catch((e) => log.error("report.failed", e));
-      await runMonthlyReport({ db: env.DB, tg: deps.telegram(env), admins, now, timeZone }).catch((e) => log.error("report.monthly_failed", e));
-      await runContentPlanner({ db: env.DB, tg: deps.telegram(env), ai, admins, now, timeZone }).catch((e) => log.error("planner.failed", e));
-      await runAutopilot({ db: env.DB, tg: deps.telegram(env), ai, admins, now, timeZone }).catch((e) => log.error("autopilot.failed", e));
-      await runAiTick({ tg: deps.telegram(env), db: env.DB, ai, admins, timeZone, handlers: CONTENT_HANDLERS }, now).catch((e) => log.error("ai.tick_failed", e));
+      if (systemActive(env)) {
+        await runDailyReport({ db: env.DB, tg: deps.telegram(env), admins, now, timeZone })
+          .catch((e) => log.error("report.failed", e));
+        await runMonthlyReport({ db: env.DB, tg: deps.telegram(env), admins, now, timeZone }).catch((e) => log.error("report.monthly_failed", e));
+        await runContentPlanner({ db: env.DB, tg: deps.telegram(env), ai, admins, now, timeZone }).catch((e) => log.error("planner.failed", e));
+        await runAutopilot({ db: env.DB, tg: deps.telegram(env), ai, admins, now, timeZone }).catch((e) => log.error("autopilot.failed", e));
+        await runAiTick({ tg: deps.telegram(env), db: env.DB, ai, admins, timeZone, handlers: CONTENT_HANDLERS }, now).catch((e) => log.error("ai.tick_failed", e));
+      }
       await runJobs(env, now);
       if (now.getUTCMinutes() === 0) {
         const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
