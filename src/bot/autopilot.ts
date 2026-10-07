@@ -111,7 +111,7 @@ export async function handleAutopilotCommand(ctx: Ctx, chatId: number, adminId: 
     `🤖 <b>Автопилот ${enabled ? "включён" : "выключен"}</b>\n\n` +
       `По субботам в 12:00 бот предлагает план недели (пн бизнес-модель, ср доверие, пт возможность, вс инсайт), вы выбираете темы. ` +
       `Ночью перед днём поста бот готовит текст или PDF, в ${DELIVERY_HOUR}:00 присылает на проверку. Публикация только по вашей кнопке.\n` +
-      (ctx.ai ? "" : "\n⚠️ Нет ключа OpenAI, автопилот не работает.\n") +
+      (ctx.ai ? "" : "\n⏸ AI на паузе (SYSTEM_STATUS) или нет ключа OpenAI: автопилот не работает.\n") +
       `\n/week: что запланировано, /plan: план на следующую неделю\n` +
       `<code>/autopilot off</code>, <code>/autopilot on</code>\n<code>/autopilot now exhibition</code> или <code>/autopilot now business</code>: PDF вне плана прямо сейчас`,
   );

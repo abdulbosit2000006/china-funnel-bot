@@ -81,7 +81,7 @@ function caseCollectKeyboard(id: number): InlineKeyboard {
 /** Turns a voice message into text; the cost is recorded in ai_runs so the monthly budget sees it. */
 async function transcribeVoice(ctx: ContentCtx, chatId: number, voice: NonNullable<TgMessage["voice"]>): Promise<string | null> {
   if (!ctx.ai?.transcribe) {
-    await sendMessage(ctx.tg, chatId, "🔑 Расшифровка голосовых недоступна: нужен ключ OpenAI. Напишите текстом, пожалуйста.");
+    await sendMessage(ctx.tg, chatId, "⏸ Расшифровка голосовых сейчас недоступна (AI на паузе или нет ключа OpenAI). Напишите текстом, пожалуйста.");
     return null;
   }
   if (voice.duration > MAX_VOICE_SECONDS) {

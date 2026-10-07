@@ -12,6 +12,8 @@ export default defineConfig({
           TELEGRAM_WEBHOOK_SECRET: "test-webhook-secret",
           ADMIN_API_TOKEN: "test-admin-api-token",
           ADMIN_TG_IDS: "1000",
+          // Production starts PAUSED (wrangler.jsonc); tests exercise the active system unless they say otherwise.
+          SYSTEM_STATUS: "ACTIVE",
         },
       },
     })),

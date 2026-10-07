@@ -26,7 +26,7 @@ const DEFAULT_DAILY_LIMIT = 10;
 const MAX_ROUNDS = 2;
 /** A background response that runs longer than this is given up. */
 const MAX_RUN_MINUTES = 30;
-const NO_KEY = "🔑 OpenAI не подключён: добавьте секрет OPENAI_API_KEY в Cloudflare (docs/setup-cloudflare.md, шаг «AI-research»).";
+const NO_KEY = "⏸ AI сейчас недоступен: система на паузе (SYSTEM_STATUS=PAUSED, см. PAUSE_RESUME.md) или не задан ключ OPENAI_API_KEY. Ничего не запущено, OpenAI не расходуется.";
 
 export type Kind = "DISCOVER" | "RESEARCH" | "PLAN" | "EQUIPMENT" | "DRAFT" | "CASE";
 

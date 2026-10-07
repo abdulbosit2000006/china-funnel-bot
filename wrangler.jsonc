@@ -23,7 +23,9 @@
     "TIMEZONE": "Asia/Tashkent",
     // AI research model (OpenAI Responses API with web search).
     "OPENAI_MODEL": "gpt-6.1-sol",
-    "OPENAI_TRANSCRIBE_MODEL": "gpt-4o-mini-transcribe"
+    "OPENAI_TRANSCRIBE_MODEL": "gpt-4o-mini-transcribe",
+    // Master switch: "ACTIVE" runs AI and the scheduled AI work; anything else pauses it (PAUSE_RESUME.md).
+    "SYSTEM_STATUS": "PAUSED"
   }
   // Secrets (never in git): TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, ADMIN_API_TOKEN, ADMIN_TG_IDS, OPENAI_API_KEY
 }
