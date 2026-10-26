@@ -1,0 +1,314 @@
+{
+  "slug": "interzum-guangzhou-2027",
+  "title": "interzum guangzhou 2027: biznes safar hisob-kitobi",
+  "research_date": "2026-10-26",
+  "currency": "USD",
+  "exhibition": {
+    "name": "interzum guangzhou",
+    "full_name": "CIFM / interzum guangzhou 2027: mebel ishlab chiqarish, yog'ochga ishlov berish va interyer bezatish ko'rgazmasi",
+    "official_site": "https://interzum-guangzhou.com",
+    "organizer": "Koelnmesse GmbH va China Foreign Trade Centre Group",
+    "venue": "Canton Fair Complex (Pazhou), B va C zonalar, Haizhu tumani, Guangzhou",
+    "city": "Guangzhou",
+    "edition": "2027",
+    "tagline": "Mebel ishlab chiqarish ko'rgazmasi: stanoklar, furnitura, plitalar va materiallar bir joyda",
+    "dates": {
+      "value": "28–31 mart 2027",
+      "label": "VERIFIED",
+      "source": 1
+    },
+    "phases": [
+      {
+        "name": "interzum guangzhou",
+        "dates": "28–31 mart",
+        "categories": "Mebel stanoklari, Furnitura, Plitalar va laminat, Yelim va kimyo, Yumshoq mebel uskunalari, Interyer materiallari"
+      },
+      {
+        "name": "CIFF (bir vaqtda)",
+        "dates": "28–31 mart",
+        "categories": "China International Furniture Fair: tashkilotchi uni Osiyodagi eng katta mebel ko'rgazmasi deb ataydi; tayyor mebel va dizayn trendlari"
+      }
+    ],
+    "focus_phase": "interzum guangzhou",
+    "relevance": [
+      "Mebel sexini ochish yoki kengaytirish uchun hammasi bir joyda: CNC raskroy stanoklari, kromka stanoklari, furnitura, LDSP/MDF va laminat.",
+      "2026 yilda 1 750 ta ishtirokchi kompaniya va 170 000 m² maydon: bir necha kunda o'nlab ishlab chiqaruvchini solishtirish mumkin.",
+      "Ko'rgazmadan 1 soatlik masofada Foshan (Shunde va Nanhai): tashkilotchi ma'lumotiga ko'ra, bu ikki tuman Xitoydagi yog'ochga ishlov berish stanoklari quvvatining 60% dan ortig'ini beradi.",
+      "Toshkentdan Guangzhou'ga to'g'ridan-to'g'ri reyslar bor va O'zbekiston fuqarolari uchun Xitoyga 30 kungacha vizasiz kirish amal qiladi."
+    ],
+    "stats": {
+      "year": "2026",
+      "source": 1,
+      "items": [
+        {
+          "label": "ishtirokchi kompaniya",
+          "value": "1 750"
+        },
+        {
+          "label": "ko'rgazma maydoni",
+          "value": "170 000 m²"
+        },
+        {
+          "label": "professional tashrif buyuruvchi (CIFF bilan)",
+          "value": "353 106"
+        }
+      ]
+    },
+    "visitor_info": {
+      "value": "Faqat professional tashrif buyuruvchilar uchun, 18 yoshdan katta. Ochilish vaqti: 28–30 mart 9:00–18:00, 31 mart 9:00–17:00; oxirgi kirish 16:00.",
+      "label": "VERIFIED",
+      "source": 1
+    },
+    "registration": {
+      "value": "Professional tashrif buyuruvchilar uchun real ism bilan oldindan ro'yxatdan o'tish; kirishda o'sha pasport kerak.",
+      "label": "MARKET DATA",
+      "source": 2
+    }
+  },
+  "scenario": {
+    "people": 2,
+    "route": "Toshkent (TAS) → Guangzhou (CAN) → Toshkent, to'g'ridan-to'g'ri reys",
+    "trip_dates": "26 mart – 1 aprel 2027",
+    "nights": 6,
+    "days": 7,
+    "rooms": 1,
+    "hotel_category": "3–4★, Pazhou hududi, 2 ta karavotli",
+    "hotel_short": "Pazhou, 1 xona (2 kishi), 6 kecha"
+  },
+  "inputs": [
+    {
+      "key": "flight",
+      "title": "Aviachipta (borish-qaytish)",
+      "unit_price": 749,
+      "unit": "kishi",
+      "factors": [
+        [
+          "people",
+          "kishi"
+        ]
+      ],
+      "label": "MARKET DATA",
+      "source": 3,
+      "note": "Median narx. To'g'ridan-to'g'ri reyslar: Centrum Air, Uzbekistan Airways, China Southern, Qanot Sharq."
+    },
+    {
+      "key": "hotel",
+      "title": "Mehmonxona",
+      "unit_price": 50,
+      "unit": "xona/kecha",
+      "factors": [
+        [
+          "rooms",
+          "xona"
+        ],
+        [
+          "nights",
+          "kecha"
+        ]
+      ],
+      "label": "MARKET DATA",
+      "source": 5,
+      "note": "2 karavotli xona; Pazhou'da shunday mehmonxonalar ~£21–41 dan (Trip.com)"
+    },
+    {
+      "key": "food",
+      "title": "Ovqatlanish",
+      "unit_price": 35,
+      "unit": "kishi/kun",
+      "factors": [
+        [
+          "people",
+          "kishi"
+        ],
+        [
+          "days",
+          "kun"
+        ]
+      ],
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Kuniga 3 mahal"
+    },
+    {
+      "key": "local",
+      "title": "Shahar ichida transport",
+      "unit_price": 12,
+      "unit": "kishi/kun",
+      "factors": [
+        [
+          "people",
+          "kishi"
+        ],
+        [
+          "days",
+          "kun"
+        ]
+      ],
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Metro, DiDi, aeroport transferi"
+    },
+    {
+      "key": "factory_day",
+      "title": "Shunde (Lunjiao) zavodlariga safar: haydovchili mashina",
+      "unit_price": 80,
+      "unit": "mashina/kun",
+      "factors": [
+        [
+          1,
+          "kun"
+        ]
+      ],
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Pazhou → Lunjiao va qaytish"
+    },
+    {
+      "key": "esim",
+      "title": "eSIM (internet)",
+      "unit_price": 15,
+      "unit": "kishi",
+      "factors": [
+        [
+          "people",
+          "kishi"
+        ]
+      ],
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "7–10 kunlik paket"
+    },
+    {
+      "key": "other",
+      "title": "Boshqa kutilgan xarajatlar",
+      "unit_price": 50,
+      "unit": "kishi",
+      "factors": [
+        [
+          "people",
+          "kishi"
+        ]
+      ],
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Namunalar, katalog, mayda xarajatlar"
+    }
+  ],
+  "reserve_pct": 10,
+  "program": [
+    {
+      "day": "26 mart",
+      "text": "Toshkentdan kechki to'g'ridan-to'g'ri reys (taxminan 6,5–7 soat, vaqt farqi +3 soat). Guangzhou'ga tunda kelish, Pazhou'dagi mehmonxonaga joylashish."
+    },
+    {
+      "day": "27 mart",
+      "text": "Dam olish va tayyorgarlik: eSIM, Alipay/WeChat Pay, ko'rgazma majmuasigacha yo'lni ko'rish. Uchrashuvlar rejasi va stendlar ro'yxati."
+    },
+    {
+      "day": "28 mart",
+      "text": "interzum guangzhou, 1-kun: yog'ochga ishlov berish stanoklari pavilonlari (CNC raskroy, kromka, parmalash), narx so'rovlari."
+    },
+    {
+      "day": "29 mart",
+      "text": "interzum guangzhou, 2-kun: tanlangan stendlarda muzokaralar, furnitura va plitalar yetkazib beruvchilari, CIFF'da tayyor mebel trendlari."
+    },
+    {
+      "day": "30 mart",
+      "text": "Foshan, Shunde (Lunjiao): stanok zavodlariga tashrif, ishlab chiqarish va sinov kesishini ko'rish (oldindan kelishilgan holda)."
+    },
+    {
+      "day": "31 mart",
+      "text": "interzum guangzhou, oxirgi kun (17:00 gacha): takroriy uchrashuvlar, takliflarni solishtirish, keyingi qadamlarni kelishish."
+    },
+    {
+      "day": "1 aprel",
+      "text": "Toshkentga qaytish."
+    }
+  ],
+  "checklist": [
+    "Pasport amal qilish muddati: kamida 6 oy.",
+    "Vizasiz rejim shartlarini safar oldidan rasmiy manbadan qayta tekshirish (30 kungacha, ish uchun emas).",
+    "Ko'rgazmaga real ism bilan oldindan ro'yxatdan o'tish; kirishda o'sha pasport.",
+    "Aviachipta va mehmonxonani 2–3 oy oldin bron qilish: ko'rgazma haftasida Pazhou mehmonxonalari tez to'ladi.",
+    "Alipay yoki WeChat Pay'ni xorijiy karta bilan ulash, oz miqdorda naqd yuan.",
+    "Kerakli stanoklar ro'yxati: plita o'lchami (2750×1830 yoki 2800×2070), kunlik hajm, byudjet.",
+    "Vizitkalar (ingliz/xitoy tilida) va sexingiz haqida qisqa taqdimot.",
+    "Tarjimon ilovasi va oflayn xarita."
+  ],
+  "practical": [
+    {
+      "title": "To'lov",
+      "text": "Xitoyda deyarli hamma joyda Alipay va WeChat Pay. Naqd yuan ham olib yuring."
+    },
+    {
+      "title": "Internet",
+      "text": "Ko'plab xorijiy ilovalar ishlamaydi; roaming eSIM odatda ishlaydi."
+    },
+    {
+      "title": "Transport",
+      "text": "Pazhou'da metro bekatlari ko'rgazma majmuasining yonida; DiDi taksi qulay."
+    },
+    {
+      "title": "Muqobil",
+      "text": "Kyoln'dagi asosiy interzum 2027 yil 11–14 may kunlari bo'ladi (Yevropa ishlab chiqaruvchilari)."
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "title": "interzum guangzhou rasmiy sayti: sanalar, joy, tashkilotchilar, statistika",
+      "url": "https://interzum-guangzhou.com/about/",
+      "type": "OFFICIAL",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 2,
+      "title": "JUFAIR: interzum guangzhou chiptalari va kirish shartlari",
+      "url": "https://en.jufair.com/exhibition/interzum-guangzhou/ticket",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 3,
+      "title": "RatePunk: Toshkent–Guangzhou aviachipta narxlari (median, 19.10.2026 yangilangan)",
+      "url": "https://www.ratepunk.com/flights-from-to/TAS/CAN/cheap-flights-from-tashkent-to-guangzhou",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 4,
+      "title": "Kun.uz: O'zbekiston va Xitoy o'rtasida 30 kunlik vizasiz rejim (1 iyun 2025 dan)",
+      "url": "https://www.kun.uz/en/news/2025/05/13/uzbekistan-and-china-to-launch-30-day-visa-free-travel-starting-june-2025",
+      "type": "SECONDARY",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 5,
+      "title": "Trip.com: Canton Fair yaqinidagi mehmonxonalar va Guangzhou o'rtacha narxlari",
+      "url": "https://uk.trip.com/hotels/landmark/cn/canton-fair.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 6,
+      "title": "Aviasales: TAS–CAN to'g'ridan-to'g'ri reyslar jadvali",
+      "url": "https://www.aviasales.tj/en/routes/tas/can",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 7,
+      "title": "CIFF Click2Connect: Foshan (Shunde, Nanhai) yog'ochga ishlov berish stanoklari klasteri",
+      "url": "https://click2connect.ciff-gz.com/blogs/69ec6e63a1e2d46b1a1200be",
+      "type": "SECONDARY",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 8,
+      "title": "interzum Kyoln 2027: sanalar",
+      "url": "https://www.interzum.com/en/trade-fair/interzum/date-and-opening-hours/",
+      "type": "OFFICIAL",
+      "retrieved_at": "2026-10-26"
+    }
+  ]
+}

@@ -1,0 +1,606 @@
+{
+  "slug": "furniture-parts-cnc-2130",
+  "title": "Mebel detallari sexi: CNC raskroy va kromka, biznes model",
+  "research_date": "2026-10-26",
+  "currency": "USD",
+  "product": {
+    "name": "Mebel detallari sexi: CNC raskroy va kromka",
+    "tagline": "LDSP plitadan tayyor mebel detallari: kesish, parmalash va kromkalash bir sexda, mebel ustalari va do'konlar uchun",
+    "description": "Sex mijozning chizmasi bo'yicha LDSP plitani CNC stanokda kesadi, furnitura uchun teshiklarni parmalaydi va detallarning chetini avtomatik stanokda PVX kromka bilan yopadi. Mijoz yig'ishga tayyor detallar to'plamini oladi. Modelda o'lchov birligi: 1 ta to'liq ishlov berilgan plita (16 mm LDSP, taxminan 2750×1830 mm), plita sexning o'zidan sotiladi. Narxlar so'mda olingan va $1 = 11 965,51 so'm kursi bo'yicha dollarga o'tkazilgan.",
+    "unit": "list"
+  },
+  "equipment": {
+    "name": "CNC nesting stanogi HT-2130E (ATC, 2100×3000 mm)",
+    "manufacturer": {
+      "value": "Jinan Hopetool CNC Equipment Co., Ltd. (Jinan, Shandong)",
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "model": {
+      "value": "HT-2130E",
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "image_url": "https://image.made-in-china.com/2f0j00tMHVQaBrIORP/High-Quality-Vacuum-Table-2030-2130-Atc-CNC-Wood-Router-for-Furniture-Cabinets.jpg",
+    "price": {
+      "value": 8559,
+      "label": "MARKET DATA",
+      "source": 1,
+      "note": "1–2 dona uchun e'londagi narx; yetkazish shartlari ko'rsatilmagan"
+    },
+    "capacity_per_hour": {
+      "value": 6,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "1 plitani kesish va parmalash ≈ 8–10 daqiqa, yuklash bilan; sinov kesishida tekshirilishi kerak"
+    },
+    "power_kw": {
+      "value": 12,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "9 kVt shpindel + vakuum nasos; o'rtacha iste'mol"
+    },
+    "area_m2": {
+      "value": 30,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Stanok va plita yuklash joyi"
+    },
+    "operators": {
+      "value": 1,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    "weight": {
+      "value": "2 000 kg",
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "automation": {
+      "value": "12 ta asbobli chiziqli avtomatik asbob almashtirish (ATC), vakuumli stol: bitta dasturda kesish va parmalash",
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "included": [
+      "CNC stanok, ish maydoni 2100×3000 mm (standart 2750×1830 va 2800×2070 plitalar sig'adi)",
+      "9 kVt havo sovutishli shpindel",
+      "12 ta asbobli chiziqli ATC",
+      "Moysiz vakuum nasos"
+    ],
+    "additional_equipment": [
+      "Avtomatik kromka stanogi HZH368D: yopishtirish, kesish, burchak yumaloqlash, silliqlash (5,7 m uzunlik)",
+      "Qipiq so'rgich (chang yig'gich)",
+      "Havo kompressori",
+      "Raskroy va mebel loyihalash dasturi"
+    ],
+    "installation": {
+      "value": "Ishlab chiqaruvchi muhandisi yoki video-yo'riqnoma orqali; muddati kelishiladi",
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    "lead_time": {
+      "value": "Ishlab chiqarish taxminan 10–20 kun + yetkazib berish",
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "warranty": {
+      "value": "2 yil",
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "raw_materials": [
+      {
+        "name": "LDSP 16 mm",
+        "spec": "2750×1830 yoki 2500×1830 mm, Shexna / Kronospan",
+        "price": {
+          "value": "348 000 so'm ulgurji (Shexna), 372 750 so'm chakana (Kronospan) / list",
+          "label": "MARKET DATA",
+          "source": 3
+        }
+      },
+      {
+        "name": "PVX kromka 19/2",
+        "spec": "19 mm × 2 mm, 100 m rulon",
+        "price": {
+          "value": "198 000 so'm / 100 m (1 980 so'm/m)",
+          "label": "MARKET DATA",
+          "source": 4
+        }
+      },
+      {
+        "name": "PVX kromka 35/1",
+        "spec": "35 mm × 1 mm, ko'rinmaydigan chetlar uchun",
+        "price": {
+          "value": "793–1 830 so'm / m",
+          "label": "MARKET DATA",
+          "source": 5
+        }
+      },
+      {
+        "name": "Kromka yelimi (termoyelim)",
+        "spec": "Granula, avtomatik kromka stanogi uchun",
+        "price": {
+          "value": "Narx topilmadi",
+          "label": "UNKNOWN",
+          "source": null
+        }
+      },
+      {
+        "name": "Frezalar va parmalar",
+        "spec": "Kesish frezasi 6–12 mm, furnitura parmalari",
+        "price": {
+          "value": "Narx topilmadi",
+          "label": "UNKNOWN",
+          "source": null
+        }
+      }
+    ],
+    "dimensions_mm": {
+      "length": 3500,
+      "width": 2250,
+      "height": 1900,
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "work_area_mm": {
+      "x": 2100,
+      "y": 3000
+    }
+  },
+  "highlights": [
+    "Bitta CNC stanok kesish va parmalashni bitta dasturda qiladi: qo'lda o'lchash xatolari va brak kamayadi.",
+    "Asosiy xomashyo, LDSP va kromka, Toshkentda sotiladi: import faqat stanoklar uchun kerak.",
+    "Toshkentda shunga o'xshash Xitoy stanoklari 100 mln so'mdan sotilmoqda; zavoddan to'g'ridan-to'g'ri olish narxni solishtirish imkonini beradi.",
+    "Sex o'zi ham mebel yasashi yoki faqat mebel ustalariga xizmat ko'rsatishi mumkin."
+  ],
+  "post_stats": [
+    {
+      "label": "stanok narxi (Xitoy)",
+      "value": "$8 559",
+      "source": 1
+    },
+    {
+      "label": "ish maydoni",
+      "value": "2100×3000 mm",
+      "source": 1
+    },
+    {
+      "label": "LDSP 16 mm, Toshkent",
+      "value": "348–373 ming so'm/list",
+      "source": 3
+    }
+  ],
+  "market": {
+    "summary": "Toshkentda LDSP plitalar, kromka va raskroy xizmati keng sotiladi; mebel ustalari va kichik sexlar tayyor detallarni buyurtma qiladi. Raskroy va kromkalash xizmatlari narxlari ochiq manbalarda kam e'lon qilinadi, shuning uchun sotish narxi bozor ma'lumoti va farazdan tuzilgan.",
+    "selling_price_per_unit": {
+      "value": 44.52,
+      "label": "ESTIMATED",
+      "source": 6,
+      "note": "1 list = LDSP 372 750 so'm (chakana) + raskroy 45 000 so'm + kromkalash 18 m × 5 000 so'm + parmalash 25 000 so'm = 532 750 so'm. Kromkalash va parmalash narxi faraz."
+    },
+    "demand_indicators": [
+      {
+        "value": "Toshkent marketplace'larida LDSP plitalarning o'nlab dekorlari mavjud va sotuvda",
+        "label": "MARKET DATA",
+        "source": 3
+      },
+      {
+        "value": "Raskroy va kromkalash xizmati yirik qurilish materiallari do'konlarida ham taklif qilinadi",
+        "label": "MARKET DATA",
+        "source": 6
+      }
+    ],
+    "competitors": [
+      {
+        "name": "Qurilish materiallari do'konlaridagi raskroy xizmati (masalan, eman.uz)",
+        "note": "Plita sotib olgan mijozga kesish va kromkalash",
+        "source": 6
+      },
+      {
+        "name": "Mebel sexlari va ustalarning o'z stanoklari",
+        "note": "Ko'pincha formatli arra va qo'lda kromkalash",
+        "source": null
+      },
+      {
+        "name": "Toshkentdagi stanok sotuvchilari (VAVCO MACHINERY va boshqalar)",
+        "note": "HUAHUA CNC va kromka stanoklari 100 mln so'mdan",
+        "source": 7
+      }
+    ],
+    "imports_local": {
+      "value": "Mebel detallari bozorining hajmi va import ulushi bo'yicha rasmiy statistika topilmadi",
+      "label": "UNKNOWN",
+      "source": null
+    },
+    "customers": [
+      "Mebel ustalari va kichik sexlar",
+      "Mebel do'konlari (buyurtma asosida)",
+      "Qurilish va ta'mir kompaniyalari",
+      "Shaxsiy buyurtmachilar (oshxona, shkaf-kupe)"
+    ],
+    "distribution": "To'g'ridan-to'g'ri mebel ustalari bilan, Telegram va Instagram orqali buyurtma; plita do'konlari bilan hamkorlik.",
+    "risks": [
+      "Raskroy xizmatiga narx raqobati",
+      "Plita narxi valyuta kursiga bog'liq",
+      "Yuklama buyurtmalar oqimiga bog'liq"
+    ],
+    "limitations": [
+      "Toshkentda kromkalash (so'm/metr) va parmalash narxlari ochiq e'lon qilinmagan, modelda faraz",
+      "Ijara narxi bo'yicha manba olinmadi (OLX sahifasi ochilmadi)"
+    ]
+  },
+  "capex": [
+    {
+      "key": "cnc",
+      "title": "CNC nesting stanogi HT-2130E",
+      "amount": 8559,
+      "label": "MARKET DATA",
+      "source": 1,
+      "note": "Jinan Hopetool, made-in-china.com e'loni"
+    },
+    {
+      "key": "edge",
+      "title": "Avtomatik kromka stanogi HZH368D",
+      "amount": 12300,
+      "label": "MARKET DATA",
+      "source": 11,
+      "note": "Qingdao Haozhonghao, namuna narxi $12 300 (e'londa $10 000–15 000); 12,5 kVt, 20 m/daq"
+    },
+    {
+      "key": "dust",
+      "title": "Qipiq so'rgich",
+      "amount": 1200,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "compressor",
+      "title": "Havo kompressori",
+      "amount": 800,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "shipping",
+      "title": "Yetkazib berish Xitoy → Toshkent (1 konteyner)",
+      "amount": 5000,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Logist bilan aniqlanadi"
+    },
+    {
+      "key": "customs",
+      "title": "Bojxona to'lovlari va QQS",
+      "amount": 3343,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "12% × (uskunalar + yetkazish); broker bilan tekshiring"
+    },
+    {
+      "key": "install",
+      "title": "O'rnatish, sozlash va o'qitish",
+      "amount": 1500,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "workshop",
+      "title": "Sexni tayyorlash (380 V elektr, ventilyatsiya, pol)",
+      "amount": 3000,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "working_capital",
+      "title": "Aylanma mablag': 200 list LDSP va kromka zaxirasi",
+      "amount": 6300,
+      "label": "ASSUMPTION",
+      "source": 3,
+      "note": "200 × 348 000 so'm ≈ $5 817 + kromka"
+    },
+    {
+      "key": "software",
+      "title": "Raskroy va loyihalash dasturi",
+      "amount": null,
+      "label": "UNKNOWN",
+      "source": null
+    }
+  ],
+  "opex_monthly": [
+    {
+      "key": "rent",
+      "title": "Sex ijarasi (28 × 9 m ≈ 252 m²)",
+      "amount": 750,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "salaries",
+      "title": "Ish haqi: 4 kishi (CNC operatori, kromkachi, yordamchi, buyurtma qabul qiluvchi-dizayner)",
+      "amount": 2632,
+      "label": "ESTIMATED",
+      "source": 8,
+      "note": "Sanoatdagi o'rtacha ish haqi 7,87 mln so'm × 4"
+    },
+    {
+      "key": "social_tax",
+      "title": "Ijtimoiy soliq (ish haqining 12%)",
+      "amount": 316,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "power_other",
+      "title": "Kromka stanogi, kompressor va so'rgich elektr energiyasi",
+      "amount": 140,
+      "label": "ASSUMPTION",
+      "source": 9,
+      "note": "Kromka stanogi 12,5 kVt × ~50% yuklama + kompressor va so'rgich"
+    },
+    {
+      "key": "maintenance",
+      "title": "Texnik xizmat va ehtiyot qismlar",
+      "amount": 150,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "other",
+      "title": "Boshqa (aloqa, transport, buxgalteriya, reklama)",
+      "amount": 300,
+      "label": "ASSUMPTION",
+      "source": null
+    }
+  ],
+  "variable_costs": [
+    {
+      "key": "ldsp",
+      "title": "LDSP 16 mm plita",
+      "amount": 29.08,
+      "label": "MARKET DATA",
+      "source": 3,
+      "note": "348 000 so'm, ulgurji narx"
+    },
+    {
+      "key": "edge",
+      "title": "PVX kromka 19/2, 18 m",
+      "amount": 2.98,
+      "label": "MARKET DATA",
+      "source": 4,
+      "note": "18 m × 1 980 so'm; metr soni faraz"
+    },
+    {
+      "key": "glue",
+      "title": "Kromka yelimi",
+      "amount": 0.35,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "tools",
+      "title": "Freza va parmalar eskirishi",
+      "amount": 0.5,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "pack",
+      "title": "Belgilash va qadoqlash",
+      "amount": 0.3,
+      "label": "ASSUMPTION",
+      "source": null
+    }
+  ],
+  "revenue_costs": [
+    {
+      "key": "turnover_tax",
+      "title": "Aylanmadan olinadigan soliq",
+      "pct": 4,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Soliq rejimini buxgalter bilan tekshiring"
+    }
+  ],
+  "production": {
+    "hours_per_day": 8,
+    "shifts_per_day": 1,
+    "working_days_per_month": 26,
+    "utilization_base": 0.7,
+    "scrap_pct": 2,
+    "electricity_price_kwh": {
+      "value": 0.0919,
+      "label": "VERIFIED",
+      "source": 9,
+      "note": "1 iyun 2026 dan yuridik shaxslar uchun 1 100 so'm/kVt·soat"
+    },
+    "label": "ASSUMPTION",
+    "source": null,
+    "note": "1 smena, haftasiga 6 kun"
+  },
+  "scenarios": [
+    0.5,
+    0.7,
+    0.9
+  ],
+  "process": [
+    {
+      "step": "Buyurtma va loyiha",
+      "text": "Mijozning chizmasi dasturda detallarga ajratiladi va plitaga eng tejamli joylashtiriladi (nesting)."
+    },
+    {
+      "step": "CNC raskroy va parmalash",
+      "text": "Plita vakuumli stolga qo'yiladi; stanok asboblarni o'zi almashtirib, detallarni kesadi va furnitura teshiklarini ochadi."
+    },
+    {
+      "step": "Kromkalash",
+      "text": "Detallar chetini avtomatik stanok frezalaydi, kromka yopishtiradi, ortiqchasini kesadi va burchaklarni yumaloqlaydi."
+    },
+    {
+      "step": "Nazorat va qadoqlash",
+      "text": "Detallar o'lchami tekshiriladi, belgilanadi va buyurtma bo'yicha topshiriladi."
+    }
+  ],
+  "facility": [
+    {
+      "title": "Maydon",
+      "value": "28 × 9 m ≈ 252 m²: plita ombori, 2 stanok, tayyor detallar joyi",
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "title": "Elektr",
+      "value": "380 V, 3 faza",
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "title": "Chang va qipiq",
+      "value": "Qipiq so'rgich va ventilyatsiya majburiy",
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "title": "Siqilgan havo",
+      "value": "Kompressor kerak (kromka stanogi va tozalash)",
+      "label": "ASSUMPTION",
+      "source": null
+    }
+  ],
+  "risks": [
+    {
+      "title": "Sotish narxi",
+      "text": "Kromkalash va parmalash narxi faraz. Bozor narxi past bo'lsa, foyda tez kamayadi: 3–5 mebel ustasidan narxni oldindan bilib oling."
+    },
+    {
+      "title": "Buyurtmalar oqimi",
+      "text": "Asosiy ssenariy oyiga 800 dan ortiq plita talab qiladi. Doimiy mijozlar bo'lmasa, yuklama tushadi."
+    },
+    {
+      "title": "Stanok sifati",
+      "text": "Arzon Xitoy stanoklarining sifati turlicha. Zavodga tashrif yoki video-inspeksiya va sinov kesish shart."
+    },
+    {
+      "title": "Valyuta va xomashyo",
+      "text": "Plita narxi kurs bilan o'zgaradi; aylanma mablag' zaxirasini ushlab turing."
+    }
+  ],
+  "verify_before_investment": [
+    "Ishlab chiqaruvchidan rasmiy taklif (quotation): to'plam, kafolat, yetkazish shartlari",
+    "Ikkala stanokni zavodda ko'rish va o'z plitangizda sinov kesish",
+    "Bojxona to'lovlari va sertifikatlashni broker bilan hisoblash",
+    "Kromkalash va parmalash narxlarini 3–5 ta Toshkent sexidan so'rash",
+    "Ijara: 250 m², 380 V elektr quvvati",
+    "Plita yetkazib beruvchilardan ulgurji narx va minimal partiya"
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "title": "Made-in-China: Jinan Hopetool HT-2130E",
+      "url": "https://hopetoolcnc.en.made-in-china.com/product/YZFAUEGJVDfM/China-High-Quality-Vacuum-Table-2030-2130-Atc-CNC-Wood-Router-for-Furniture-Cabinets.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 3,
+      "title": "Glotr.uz: LDSP 16 mm, Toshkent",
+      "url": "https://glotr.uz/ldsp-v-tashkente/",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 4,
+      "title": "Stroyka.uz: PVX kromka 19/2, 100 m",
+      "url": "https://stroyka.uz/offer/mebelnaya-kromka-pvkh",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 5,
+      "title": "Eman.uz: PVX kromka 35/1",
+      "url": "https://eman.uz/ru/product/176/list/",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 6,
+      "title": "Eman.uz: LDSP raskroy xizmati",
+      "url": "https://www.eman.uz/ru/product/6230/",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 7,
+      "title": "Prom.uz: mebel uskunalari, Toshkent",
+      "url": "https://www.prom.uz/section/oborudovanie-dlya-proizvodstva-mebeli/",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 8,
+      "title": "IntelliNews: o'rtacha ish haqi, 2026 1-yarim",
+      "url": "https://www.intellinews.com/uzbekistan-s-average-monthly-wage-climbs-18-in-1h-457191/",
+      "type": "SECONDARY",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 9,
+      "title": "Kun.uz: elektr tariflari, 1.06.2026 dan",
+      "url": "https://kun.uz/en/news/2026/05/15/uzbekistan-to-raise-electricity-and-natural-gas-tariffs-from-june-1",
+      "type": "SECONDARY",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 10,
+      "title": "Cbonds: USD/UZS, Markaziy bank (23.10.2026)",
+      "url": "https://cbonds.com/indexes/130/",
+      "type": "SECONDARY",
+      "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 11,
+      "title": "Made-in-China: Qingdao Haozhonghao HZH368D kromka stanogi",
+      "url": "https://sandingmachine.en.made-in-china.com/product/fOiaWXhGbykn/China-Automatic-Woodworking-Furniture-PVC-Veneer-Corner-Rounding-Trimming-Bander-Edge-Banding-Machine.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
+    }
+  ],
+  "layout": {
+    "hall_length_m": 28,
+    "hall_width_m": 9,
+    "label": "ASSUMPTION",
+    "source": null,
+    "note": "Plita chap tomondan kiradi, tayyor detallar o'ng tomondan chiqadi. Stanoklar o'lchami ishlab chiqaruvchi ma'lumotidan; omborlar o'lchami faraz. Qipiq so'rgich va kompressor devor yonida.",
+    "items": [
+      {
+        "name": "LDSP plitalar ombori",
+        "length_mm": 6000,
+        "width_mm": 2500,
+        "kind": "zone",
+        "label": "ASSUMPTION"
+      },
+      {
+        "name": "CNC nesting HT-2130E",
+        "length_mm": 3500,
+        "width_mm": 2250,
+        "kind": "machine",
+        "label": "MARKET DATA",
+        "source": 1
+      },
+      {
+        "name": "Kromka stanogi HZH368D",
+        "length_mm": 5700,
+        "width_mm": 1000,
+        "kind": "machine",
+        "label": "MARKET DATA",
+        "source": 11
+      },
+      {
+        "name": "Tayyor detallar, nazorat va qadoqlash",
+        "length_mm": 4000,
+        "width_mm": 2500,
+        "kind": "zone",
+        "label": "ASSUMPTION"
+      }
+    ]
+  }
+}

@@ -2,7 +2,7 @@
 // Prompts are Russian; everything a client reads is Uzbek (Latin). Totals and decisions are made by our code.
 import { SCORE_WEIGHTS, type Rubric } from "../content/model";
 
-const CONTEXT = `Ты редактор и research-аналитик Telegram-канала консалтинговой компании abdulbosit_source («China Business Intelligence»). Аудитория: предприниматели из Узбекистана, которые закупают в Китае производственное оборудование, сырьё (включая металл: горячекатаный рулон, катанка, проволока) и другие товары, и ездят на китайские выставки любых отраслей.
+const CONTEXT = `Ты редактор и research-аналитик Telegram-канала консалтинговой компании MERIDIAN (美瑞达) («China Business Intelligence»). Аудитория: предприниматели из Узбекистана, которые закупают в Китае производственное оборудование, сырьё (включая металл: горячекатаный рулон, катанка, проволока) и другие товары, и ездят на китайские выставки любых отраслей.
 
 Фильтр каждой темы: «BU TADBIRKORGA NIMA BERADI?» (что это даёт предпринимателю: деньги, время, меньше риска). Качество важнее количества.
 
