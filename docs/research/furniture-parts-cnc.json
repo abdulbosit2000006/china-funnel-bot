@@ -68,7 +68,7 @@
       "Moysiz vakuum nasos"
     ],
     "additional_equipment": [
-      "Avtomatik kromka stanogi: oldindan frezalash va burchak yumaloqlash bilan",
+      "Avtomatik kromka stanogi HZH368D: yopishtirish, kesish, burchak yumaloqlash, silliqlash (5,7 m uzunlik)",
       "Qipiq so'rgich (chang yig'gich)",
       "Havo kompressori",
       "Raskroy va mebel loyihalash dasturi"
@@ -134,7 +134,18 @@
           "source": null
         }
       }
-    ]
+    ],
+    "dimensions_mm": {
+      "length": 3500,
+      "width": 2250,
+      "height": 1900,
+      "label": "MARKET DATA",
+      "source": 1
+    },
+    "work_area_mm": {
+      "x": 2100,
+      "y": 3000
+    }
   },
   "highlights": [
     "Bitta CNC stanok kesish va parmalashni bitta dasturda qiladi: qo'lda o'lchash xatolari va brak kamayadi.",
@@ -229,11 +240,11 @@
     },
     {
       "key": "edge",
-      "title": "Avtomatik kromka stanogi (oldindan frezalash, burchak yumaloqlash)",
-      "amount": 12500,
+      "title": "Avtomatik kromka stanogi HZH368D",
+      "amount": 12300,
       "label": "MARKET DATA",
-      "source": 2,
-      "note": "E'londagi $10 000–15 000 oralig'ining o'rtasi (Qingdao Haozhonghao)"
+      "source": 11,
+      "note": "Qingdao Haozhonghao, namuna narxi $12 300 (e'londa $10 000–15 000); 12,5 kVt, 20 m/daq"
     },
     {
       "key": "dust",
@@ -260,7 +271,7 @@
     {
       "key": "customs",
       "title": "Bojxona to'lovlari va QQS",
-      "amount": 3367,
+      "amount": 3343,
       "label": "ASSUMPTION",
       "source": null,
       "note": "12% × (uskunalar + yetkazish); broker bilan tekshiring"
@@ -298,7 +309,7 @@
   "opex_monthly": [
     {
       "key": "rent",
-      "title": "Sex ijarasi (taxminan 250 m²)",
+      "title": "Sex ijarasi (28 × 9 m ≈ 252 m²)",
       "amount": 750,
       "label": "ASSUMPTION",
       "source": null
@@ -323,7 +334,8 @@
       "title": "Kromka stanogi, kompressor va so'rgich elektr energiyasi",
       "amount": 140,
       "label": "ASSUMPTION",
-      "source": 9
+      "source": 9,
+      "note": "Kromka stanogi 12,5 kVt × ~50% yuklama + kompressor va so'rgich"
     },
     {
       "key": "maintenance",
@@ -431,7 +443,7 @@
   "facility": [
     {
       "title": "Maydon",
-      "value": "Taxminan 250 m²: stanoklar, plita ombori, tayyor detallar joyi",
+      "value": "28 × 9 m ≈ 252 m²: plita ombori, 2 stanok, tayyor detallar joyi",
       "label": "ASSUMPTION",
       "source": null
     },
@@ -485,13 +497,6 @@
       "id": 1,
       "title": "Made-in-China: Jinan Hopetool HT-2130E",
       "url": "https://hopetoolcnc.en.made-in-china.com/product/YZFAUEGJVDfM/China-High-Quality-Vacuum-Table-2030-2130-Atc-CNC-Wood-Router-for-Furniture-Cabinets.html",
-      "type": "MARKETPLACE",
-      "retrieved_at": "2026-10-26"
-    },
-    {
-      "id": 2,
-      "title": "Made-in-China: avtomatik kromka stanoklari",
-      "url": "https://m.made-in-china.com/catlist/Wood-Edge-Banding-Machine-1964030000.html",
       "type": "MARKETPLACE",
       "retrieved_at": "2026-10-26"
     },
@@ -550,6 +555,52 @@
       "url": "https://cbonds.com/indexes/130/",
       "type": "SECONDARY",
       "retrieved_at": "2026-10-26"
+    },
+    {
+      "id": 11,
+      "title": "Made-in-China: Qingdao Haozhonghao HZH368D kromka stanogi",
+      "url": "https://sandingmachine.en.made-in-china.com/product/fOiaWXhGbykn/China-Automatic-Woodworking-Furniture-PVC-Veneer-Corner-Rounding-Trimming-Bander-Edge-Banding-Machine.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-10-26"
     }
-  ]
+  ],
+  "layout": {
+    "hall_length_m": 28,
+    "hall_width_m": 9,
+    "label": "ASSUMPTION",
+    "source": null,
+    "note": "Plita chap tomondan kiradi, tayyor detallar o'ng tomondan chiqadi. Stanoklar o'lchami ishlab chiqaruvchi ma'lumotidan; omborlar o'lchami faraz. Qipiq so'rgich va kompressor devor yonida.",
+    "items": [
+      {
+        "name": "LDSP plitalar ombori",
+        "length_mm": 6000,
+        "width_mm": 2500,
+        "kind": "zone",
+        "label": "ASSUMPTION"
+      },
+      {
+        "name": "CNC nesting HT-2130E",
+        "length_mm": 3500,
+        "width_mm": 2250,
+        "kind": "machine",
+        "label": "MARKET DATA",
+        "source": 1
+      },
+      {
+        "name": "Kromka stanogi HZH368D",
+        "length_mm": 5700,
+        "width_mm": 1000,
+        "kind": "machine",
+        "label": "MARKET DATA",
+        "source": 11
+      },
+      {
+        "name": "Tayyor detallar, nazorat va qadoqlash",
+        "length_mm": 4000,
+        "width_mm": 2500,
+        "kind": "zone",
+        "label": "ASSUMPTION"
+      }
+    ]
+  }
 }

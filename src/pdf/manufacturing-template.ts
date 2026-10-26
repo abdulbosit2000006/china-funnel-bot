@@ -1,5 +1,6 @@
 // Production business idea PDF: same MERIDIAN look as the exhibition guide, Uzbek Latin text.
 import { FONT_CSS } from "./fonts.generated";
+import { barsH, barsV, layoutPlan, machineDrawing, paybackLine } from "./charts";
 import { THEME_CSS, THEME_TOKENS, brandFooter, coverLogo, coverMark, coverSlogan } from "./theme";
 import { DATA_LABELS, money, type DataLabel, type Labeled } from "./exhibition";
 import {
@@ -172,6 +173,12 @@ h2,h3{break-after:avoid}
 .warn{border-left:1.2mm solid #b42318;background:#fdf0ee;padding:3mm 4.5mm;margin:3mm 0;border-radius:0 2mm 2mm 0;font-size:9pt}
 .warn ul{margin-top:1mm}
 .card h2{font-size:12.5pt;margin:0 0 2.5mm}
+.figure{background:#fff;border:1px solid var(--line);border-radius:2.5mm;padding:3.5mm 4mm;margin:0 0 4mm}
+.figure .t{font-weight:700;color:var(--head);margin-bottom:2mm;font-size:10pt}
+.figure .cap{font-size:7.8pt;color:var(--muted);margin-top:1.5mm}
+.figure svg{display:block}
+.legendlist{margin:2mm 0 0;padding-left:5mm;font-size:8.8pt;columns:2;column-gap:6mm}
+.legendlist li{margin-bottom:1mm;break-inside:avoid}
 ${THEME_CSS}
 </style></head><body>
 ${data.sample ? `<div class="watermark">NAMUNA</div>` : ""}
@@ -272,6 +279,29 @@ ${data.sample ? `<div class="watermark">NAMUNA</div>` : ""}
   <table><tbody>${data.facility.map((f) => `<tr><td style="width:45mm"><b>${esc(f.title)}</b></td><td>${esc(f.value)} ${badge(f.label)}${src(f.source)}</td></tr>`).join("")}</tbody></table>
   </div>
 </section>
+
+${
+  e.dimensions_mm || data.layout
+    ? `<section class="page">
+  ${next("Chizma va sex rejasi")}
+  ${
+    e.dimensions_mm
+      ? `<div class="figure block"><div class="t">${esc(e.name)}: tashqi o'lchamlar ${badge(e.dimensions_mm.label)}${src(e.dimensions_mm.source)}</div>
+      ${machineDrawing(e.dimensions_mm, e.work_area_mm)}
+      <div class="cap">Uzunligi ${num(e.dimensions_mm.length)} mm × eni ${num(e.dimensions_mm.width)} mm × balandligi ${num(e.dimensions_mm.height)} mm${e.work_area_mm ? `, ish maydoni ${num(e.work_area_mm.x)} × ${num(e.work_area_mm.y)} mm` : ""}. Sxematik chizma, masshtab saqlangan; zavod chizmasi emas.</div></div>`
+      : ""
+  }
+  ${
+    data.layout
+      ? `<div class="figure block"><div class="t">Sex rejasi: ${num(data.layout.hall_length_m)} × ${num(data.layout.hall_width_m)} m = ${num(data.layout.hall_length_m * data.layout.hall_width_m)} m² ${badge(data.layout.label)}${src(data.layout.source)}</div>
+      ${layoutPlan(data.layout.hall_length_m, data.layout.hall_width_m, data.layout.items)}
+      <ol class="legendlist">${data.layout.items.map((it) => `<li><b>${esc(it.name)}</b> · ${num(it.length_mm / 1000)} × ${num(it.width_mm / 1000)} m${it.label ? ` ${badge(it.label)}` : ""}${src(it.source)}</li>`).join("")}</ol>
+      ${data.layout.note ? `<div class="cap">${esc(data.layout.note)}</div>` : ""}</div>`
+      : ""
+  }
+</section>`
+    : ""
+}
 
 <section class="page">
   ${next("Xomashyo")}
@@ -402,6 +432,31 @@ ${data.sample ? `<div class="watermark">NAMUNA</div>` : ""}
   <div class="block">
   ${next("Xavflar")}
   <div class="pains">${data.risks.map((r, i) => `<div class="pain"><div class="pn">${String(i + 1).padStart(2, "0")}</div><div><div class="pt">${esc(r.title)}</div><div class="ps">${esc(r.text)}</div></div></div>`).join("")}</div>
+  </div>
+</section>
+
+<section class="page">
+  ${next("Hisob-kitob grafiklarda")}
+  <div class="figure block"><div class="t">Boshlang'ich investitsiya qayerga ketadi ${calcBadge}</div>
+    ${barsH(model.capex.rows.filter((r) => r.included).sort((a, b) => b.amount! - a.amount!).map((r) => ({ label: r.title.length > 42 ? r.title.slice(0, 40) + "…" : r.title, value: r.amount! })), money)}
+    <div class="cap">Jami ${money(model.capex.total)}${model.capex.excluded.length ? `; summasi noma'lum: ${notIn(model.capex.excluded)}` : ""}.</div></div>
+  <div class="figure block"><div class="t">1 ${esc(unit)} narxi nimadan iborat ${calcBadge}</div>
+    ${barsH(
+      [
+        { label: "Sotish narxi", value: model.unit.price, accent: true },
+        { label: "O'zgaruvchan xarajat (xomashyo)", value: model.unit.variable.value! },
+        { label: "Tushumdan to'lovlar (soliq)", value: model.unit.revenue_costs.value! },
+        { label: "Doimiy xarajat ulushi", value: model.unit.fixed.value! },
+        { label: "Foyda", value: model.unit.profit.value!, accent: true },
+      ],
+      moneyUnit,
+    )}</div>
+  <div class="grid2">
+    <div class="figure block"><div class="t">Oylik operatsion foyda: yuklama bo'yicha</div>
+      ${barsV(model.scenarios.map((x) => ({ label: pct(x.utilization), value: x.operating_profit, sub: `${num(x.units)} ${unit}` })), moneySigned)}</div>
+    <div class="figure block"><div class="t">Investitsiya qachon qaytadi (${pct(p.utilization_base)} yuklama)</div>
+      ${paybackLine(model.capex.total, op, moneySigned)}
+      <div class="cap">Jamg'arilgan pul: −CAPEX + oylik foyda × oy.</div></div>
   </div>
 </section>
 

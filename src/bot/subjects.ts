@@ -2,7 +2,7 @@
 // Everything else (research flow, PDF review, posts, autopilot) is shared and looks the subject up here.
 import type { LeadMagnetRow, LeadMagnetType } from "../db";
 import { discoverPrompt, researchPrompt, type Candidate } from "../ai/prompts";
-import { DEFAULT_CONTENT } from "../pdf/content";
+import { DEFAULT_CONTENT, TRIP_CONTENT } from "../pdf/content";
 import { calculateBudget, money, validateResearch, type ExhibitionResearch } from "../pdf/exhibition";
 import { exhibitionCard, type CardData } from "../pdf/post-card";
 import { footerTemplate, renderExhibitionHtml, type Brand } from "../pdf/template";
@@ -68,7 +68,7 @@ const exhibition: SubjectSpec = {
   calc: (raw) => calculateBudget(raw as unknown as ExhibitionResearch),
   renderPdf(raw, brand) {
     const data = raw as unknown as ExhibitionResearch;
-    return { html: renderExhibitionHtml(data, calculateBudget(data), brand, DEFAULT_CONTENT), footer: footerTemplate(brand, data) };
+    return { html: renderExhibitionHtml(data, calculateBudget(data), brand, TRIP_CONTENT), footer: footerTemplate(brand, data) };
   },
   caption: (magnet, raw) => buildPostText(magnet, raw as unknown as ExhibitionResearch | null),
   ctaButton: "✈️ Safar hisobini olish",

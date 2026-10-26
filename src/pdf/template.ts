@@ -11,7 +11,7 @@ export interface Brand {
 /** Our own copy (services, CTA). Kept apart from research so the AI never writes what we sell. */
 export interface BrandContent {
   services: { title: string; intro: string; main: { title: string; text: string }[]; after_title: string; after: string[] };
-  cta: { title: string; text: string };
+  cta: { title: string; text: string; button?: string };
 }
 
 export const LABEL_UZ: Record<DataLabel, string> = {
@@ -203,7 +203,7 @@ ${data.sample ? `<div class="watermark">NAMUNA</div>` : ""}
   <div class="cta">
     <h3>${esc(content.cta.title)}</h3>
     <div>${esc(content.cta.text)}</div>
-    <span class="btn">🤝 @${esc(brand.botUsername)} → Muhokama qilmoqchiman</span>
+    <span class="btn">🤝 @${esc(brand.botUsername)} → ${esc(content.cta.button ?? "Muhokama qilmoqchiman")}</span>
   </div>
 </section>
 

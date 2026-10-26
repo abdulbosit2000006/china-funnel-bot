@@ -200,6 +200,40 @@ describe("manufacturing PDF template", () => {
     );
   });
 
+  it("draws the machine and the workshop plan when sizes are given, and always shows the charts page", () => {
+    const plain = renderManufacturingHtml(research(), calculateManufacturing(research()), brand, DEFAULT_CONTENT);
+    expect(plain).not.toContain("Chizma va sex rejasi");
+    expect(plain).toContain("Hisob-kitob grafiklarda");
+
+    const data = research();
+    data.equipment.dimensions_mm = { length: 3500, width: 2250, height: 1900, label: "MARKET DATA", source: 1 };
+    data.equipment.work_area_mm = { x: 2100, y: 3000 };
+    data.layout = {
+      hall_length_m: 28,
+      hall_width_m: 9,
+      label: "ASSUMPTION",
+      source: null,
+      items: [
+        { name: "Ombor", length_mm: 6000, width_mm: 2500, kind: "zone" },
+        { name: "Stanok", length_mm: 3500, width_mm: 2250 },
+      ],
+    };
+    expect(validateManufacturing(data).ok).toBe(true);
+    const html = renderManufacturingHtml(data, calculateManufacturing(data), brand, DEFAULT_CONTENT);
+    expect(html).toContain("Chizma va sex rejasi");
+    expect(html).toContain("3 500 mm");
+    expect(html).toContain("28 × 9 m = 252 m²");
+
+    data.layout.items[1]!.width_mm = 0;
+    data.equipment.dimensions_mm.height = -1;
+    const v = validateManufacturing(data);
+    expect(v.ok).toBe(false);
+    if (!v.ok) {
+      expect(v.errors.some((e) => e.startsWith("equipment.dimensions_mm"))).toBe(true);
+      expect(v.errors.some((e) => e.startsWith("layout.items[1]"))).toBe(true);
+    }
+  });
+
   it("footer names the product and the research date", () => {
     expect(manufacturingFooter(brand, data)).toContain("Qog'oz stakan ishlab chiqarish · research 2026-10-03");
   });

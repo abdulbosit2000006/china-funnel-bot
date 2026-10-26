@@ -74,6 +74,19 @@ export interface ManufacturingResearch {
     lead_time: Labeled;
     warranty: Labeled;
     raw_materials: { name: string; spec: string; price: Labeled; note?: string }[];
+    /** Overall machine size from the manufacturer; drives the schematic drawing. */
+    dimensions_mm?: { length: number; width: number; height: number; label: DataLabel; source: number | null };
+    /** Working area (e.g. a CNC table), drawn inside the top view. */
+    work_area_mm?: { x: number; y: number };
+  };
+  /** Workshop floor plan to scale: machines and zones in production-flow order. */
+  layout?: {
+    hall_length_m: number;
+    hall_width_m: number;
+    label: DataLabel;
+    source: number | null;
+    note?: string;
+    items: { name: string; length_mm: number; width_mm: number; kind?: "machine" | "zone"; label?: DataLabel; source?: number | null }[];
   };
   /** 2–4 bullets in Uzbek: why this is interesting for an Uzbek entrepreneur. */
   highlights: string[];
@@ -528,6 +541,19 @@ export function validateManufacturing(raw: unknown): { ok: true; data: Manufactu
         https(e.image_url) && /\.(jpe?g|png|webp)/i.test(String(e.image_url)),
         "equipment.image_url: прямая ссылка https на картинку JPG/PNG (или удалите поле)",
       );
+    if (e.dimensions_mm !== undefined) {
+      const dm = e.dimensions_mm;
+      need(
+        isObj(dm) && [dm.length, dm.width, dm.height].every((x) => finite(x) && x > 0),
+        "equipment.dimensions_mm: нужны length, width, height в мм (> 0)",
+      );
+      if (isObj(dm)) {
+        inputLabel(dm.label, "equipment.dimensions_mm");
+        checkSource(dm.source, "equipment.dimensions_mm");
+      }
+    }
+    if (e.work_area_mm !== undefined)
+      need(isObj(e.work_area_mm) && finite(e.work_area_mm.x) && e.work_area_mm.x > 0 && finite(e.work_area_mm.y) && e.work_area_mm.y > 0, "equipment.work_area_mm: нужны x и y в мм");
     need(Array.isArray(e.included), "equipment.included: нужен список");
     need(Array.isArray(e.additional_equipment), "equipment.additional_equipment: нужен список");
     if (!Array.isArray(e.raw_materials) || e.raw_materials.length === 0) errors.push("equipment.raw_materials: нужен хотя бы один вид сырья");
@@ -536,6 +562,22 @@ export function validateManufacturing(raw: unknown): { ok: true; data: Manufactu
         if (!isObj(r) || !str(r.name) || !str(r.spec)) return void errors.push(`equipment.raw_materials[${i}]: нужны name и spec`);
         checkLabeled(r.price, `equipment.raw_materials[${i}].price`);
       });
+  }
+
+  if (d.layout !== undefined) {
+    const l = d.layout;
+    if (!isObj(l)) errors.push("layout: нужен объект");
+    else {
+      need(finite(l.hall_length_m) && l.hall_length_m > 0 && finite(l.hall_width_m) && l.hall_width_m > 0, "layout: нужны hall_length_m и hall_width_m (> 0)");
+      inputLabel(l.label, "layout");
+      checkSource(l.source, "layout");
+      if (!Array.isArray(l.items) || l.items.length === 0) errors.push("layout.items: нужен непустой список");
+      else
+        l.items.forEach((it, i) => {
+          need(isObj(it) && str(it.name) && finite(it.length_mm) && it.length_mm > 0 && finite(it.width_mm) && it.width_mm > 0, `layout.items[${i}]: нужны name, length_mm, width_mm`);
+          if (isObj(it) && it.source !== undefined) checkSource(it.source, `layout.items[${i}]`);
+        });
+    }
   }
 
   need(

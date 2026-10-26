@@ -60,7 +60,7 @@
       "source": 1
     },
     "registration": {
-      "value": "Real ism bilan ro'yxatdan o'tish; kirishda o'sha pasport kerak. Agregator orqali 1 kunlik chipta 30 yuan; ariza ko'rib chiqiladi. Rasmiy saytdagi oldindan ro'yxatdan o'tish shartlarini safar oldidan tekshiring.",
+      "value": "Professional tashrif buyuruvchilar uchun real ism bilan oldindan ro'yxatdan o'tish; kirishda o'sha pasport kerak.",
       "label": "MARKET DATA",
       "source": 2
     }
@@ -71,9 +71,9 @@
     "trip_dates": "26 mart – 1 aprel 2027",
     "nights": 6,
     "days": 7,
-    "rooms": 2,
-    "hotel_category": "4★, Pazhou hududi, ko'rgazmagacha piyoda yoki 1–2 metro bekati",
-    "hotel_short": "4★ Pazhou, 2 xona, 6 kecha"
+    "rooms": 1,
+    "hotel_category": "3–4★, Pazhou hududi, 2 ta karavotli",
+    "hotel_short": "Pazhou, 1 xona (2 kishi), 6 kecha"
   },
   "inputs": [
     {
@@ -94,7 +94,7 @@
     {
       "key": "hotel",
       "title": "Mehmonxona",
-      "unit_price": 150,
+      "unit_price": 50,
       "unit": "xona/kecha",
       "factors": [
         [
@@ -106,9 +106,9 @@
           "kecha"
         ]
       ],
-      "label": "ESTIMATED",
+      "label": "MARKET DATA",
       "source": 5,
-      "note": "Guangzhou 4★ o'rtacha ~£86–93; ko'rgazma haftasida qimmatroq."
+      "note": "2 karavotli xona; Pazhou'da shunday mehmonxonalar ~£21–41 dan (Trip.com)"
     },
     {
       "key": "food",
@@ -164,36 +164,6 @@
       "note": "Pazhou → Lunjiao va qaytish"
     },
     {
-      "key": "visa",
-      "title": "Viza",
-      "unit_price": 0,
-      "unit": "kishi",
-      "factors": [
-        [
-          "people",
-          "kishi"
-        ]
-      ],
-      "label": "VERIFIED",
-      "source": 4,
-      "note": "1 iyun 2025 dan 30 kungacha vizasiz"
-    },
-    {
-      "key": "registration",
-      "title": "Ko'rgazma chiptasi",
-      "unit_price": 4,
-      "unit": "kishi",
-      "factors": [
-        [
-          "people",
-          "kishi"
-        ]
-      ],
-      "label": "MARKET DATA",
-      "source": 2,
-      "note": "30 yuan, 1 kunlik chipta"
-    },
-    {
       "key": "esim",
       "title": "eSIM (internet)",
       "unit_price": 15,
@@ -207,20 +177,6 @@
       "label": "ASSUMPTION",
       "source": null,
       "note": "7–10 kunlik paket"
-    },
-    {
-      "key": "insurance",
-      "title": "Sayohat sug'urtasi",
-      "unit_price": 12,
-      "unit": "kishi",
-      "factors": [
-        [
-          "people",
-          "kishi"
-        ]
-      ],
-      "label": "ASSUMPTION",
-      "source": null
     },
     {
       "key": "other",
