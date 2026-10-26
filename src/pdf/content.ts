@@ -1,7 +1,8 @@
 import type { BrandContent } from "./template";
 
-export const BRAND_NAME = "abdulbosit_source";
-export const BRAND_MARK = "AS";
+// MERIDIAN 美瑞达 (logobook 2026). The logo itself is an SVG in brand.generated.ts.
+export const BRAND_NAME = "MERIDIAN";
+export const BRAND_MARK = "M";
 
 // Approved by Abdul on 2026-10-03: no prices or packages in the PDF.
 export const DEFAULT_CONTENT: BrandContent = {

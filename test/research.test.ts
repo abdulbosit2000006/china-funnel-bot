@@ -96,7 +96,7 @@ describe("research → PDF → approval", () => {
     expect(await (await env.FILES.get(item!.pdf_r2_key!))?.text()).toBe("%PDF-1.7 generated");
 
     const html = renderer.rendered[0]!.html;
-    expect(html).toContain("abdulbosit_source");
+    expect(html).toContain("CONNECTING OPPORTUNITIES");
     expect(html).toContain("$3 480");
     expect(html).toContain("@test_bot");
     expect(html).toContain("NAMUNA"); // the fixture is marked as a sample

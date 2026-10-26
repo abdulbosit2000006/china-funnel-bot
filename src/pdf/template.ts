@@ -1,4 +1,5 @@
 import { FONT_CSS } from "./fonts.generated";
+import { THEME_CSS, THEME_TOKENS, brandFooter, coverLogo, coverMark, coverSlogan } from "./theme";
 import { DATA_LABELS, type Budget, type DataLabel, type ExhibitionResearch, money } from "./exhibition";
 
 export interface Brand {
@@ -32,8 +33,8 @@ export const fmtDate = (iso: string) => {
   return `${d} ${MONTHS[mo! - 1]} ${y}`;
 };
 
-export function footerTemplate(brand: Brand, data: ExhibitionResearch): string {
-  return `<div style="width:100%;font-size:7pt;color:#8a94a3;padding:0 15mm;display:flex;justify-content:space-between;font-family:sans-serif"><span>${esc(brand.name)} · ${esc(data.exhibition.name)} · research ${esc(data.research_date)}</span><span class="pageNumber"></span></div>`;
+export function footerTemplate(_brand: Brand, data: ExhibitionResearch): string {
+  return brandFooter(`${esc(data.exhibition.name)} · research ${esc(data.research_date)}`);
 }
 
 export function renderExhibitionHtml(data: ExhibitionResearch, budget: Budget, brand: Brand, content: BrandContent): string {
@@ -42,7 +43,7 @@ export function renderExhibitionHtml(data: ExhibitionResearch, budget: Budget, b
   const date = fmtDate(data.research_date);
   return `<!doctype html><html lang="uz"><head><meta charset="utf-8">
 <style>${FONT_CSS}
-:root{--head:#15171a;--head2:#8a4a1f;--accent:#b5622a;--accent-soft:#f6e6da;--accent-ink:#8a4a1f;--mark-ink:#fff;--ink:#22252a;--muted:#6b7079;--line:#e7e3dd;--soft:#f7f4ef;--dark:#15171a;--dark-ink:#fff;--cover-bg:#f4f0ea;--cover-ink:#15171a;--cover-muted:#6b6660;--cover-rule:#d9d2c7;--cover-deco:rgba(181,98,42,.08);--total-bg:#15171a;--total-ink:#fff}
+${THEME_TOKENS}
 @page{size:A4;margin:16mm 15mm 18mm}
 @page:first{margin:0}
 *{box-sizing:border-box}
@@ -115,16 +116,18 @@ ul.ok{list-style:none;padding:0}ul.ok li{padding-left:5.5mm;position:relative}
 .sources td{font-size:8.5pt}
 .sources a{color:var(--head2);text-decoration:none;word-break:break-all}
 .small{font-size:8.3pt;color:var(--muted)}
+${THEME_CSS}
 </style></head><body>
 ${data.sample ? `<div class="watermark">NAMUNA</div>` : ""}
 
 <section class="page cover">
-  <div class="deco"></div>
   ${data.sample ? `<div class="samplebar">NAMUNA: SHABLON KO'RINISHI. RAQAM VA SANALAR TEKSHIRILMAGAN</div>` : ""}
-  <div class="top"><div class="logo"><span class="mark">${esc(brand.mark)}</span>${esc(brand.name)}</div><div>Biznes safar qo'llanmasi</div></div>
+  ${coverMark()}
+  <div class="top">${coverLogo()}<div>Biznes safar qo'llanmasi</div></div>
   <div class="kicker">Ko'rgazma · ${esc(e.city)}, Xitoy</div>
   <h1>${esc(e.name)}<br>biznes safari</h1>
   <div class="sub">2 kishi uchun namunaviy safar byudjeti va amaliy qo'llanma</div>
+  <div class="rule"></div>
   <div class="facts">
     <div class="fact"><div class="k">Ko'rgazma sanalari</div><div class="v">${esc(e.dates.value)}</div></div>
     <div class="fact"><div class="k">Tavsiya etilgan safar</div><div class="v">${esc(s.trip_dates)}</div></div>
@@ -137,6 +140,7 @@ ${data.sample ? `<div class="watermark">NAMUNA</div>` : ""}
   </div>
   <div class="foot">
     Research sanasi: <b>${date}</b>. Narxlar taxminiy va ${date} holatiga ko'ra; aviachipta va mehmonxona narxlari o'zgarishi mumkin.
+    ${coverSlogan()}
   </div>
 </section>
 

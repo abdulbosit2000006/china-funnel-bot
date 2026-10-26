@@ -7,7 +7,7 @@ import { manufacturingFooter, renderManufacturingHtml } from "../src/pdf/manufac
 import fixture from "./fixtures/manufacturing-research.json";
 
 const research = () => structuredClone(fixture) as unknown as ManufacturingResearch;
-const brand = { name: "abdulbosit_source", mark: "AS", botUsername: "test_bot" };
+const brand = { name: "MERIDIAN", mark: "M", botUsername: "test_bot" };
 
 describe("manufacturing model", () => {
   it("computes capacity, unit economics, profit, break-even and payback (hand-checked)", () => {
