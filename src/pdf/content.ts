@@ -71,3 +71,38 @@ export const TRIP_CONTENT: BrandContent = {
     button: "Ko'rgazmaga birga bormoqchiman",
   },
 };
+
+// Business-model PDF: the reader is about to buy equipment, not to travel. Same rules: no prices, no packages.
+export const BUSINESS_CONTENT: BrandContent = {
+  services: {
+    title: "Biz qanday yordam beramiz",
+    intro:
+      "Hisob-kitob qog'ozda chiqadi. Pul esa uskunani to'g'ri zavoddan, to'g'ri shartlarda olib, ishga tushirganda qaytadi. Shu yo'lda yoningizdamiz.",
+    main: [
+      {
+        title: "Ishlab chiqaruvchini topish va tekshirish",
+        text: "Uskunani savdo vositachisidan emas, ishlab chiqaruvchidan topamiz va kompaniyani ochiq ma'lumotlar bo'yicha tekshiramiz.",
+      },
+      {
+        title: "Narx va shartlar bo'yicha muzokara",
+        text: "Xitoy zavodlari bilan muzokaralarda amaliy tajribamiz bor: narx, to'plam, kafolat, to'lov va yetkazib berish shartlari.",
+      },
+      {
+        title: "Zavodga tashrif yoki video-inspeksiya",
+        text: "Uskunani yuborishdan oldin ishlashini ko'ramiz: sizning xomashyongizda sinov, to'plam va hujjatlarni tekshirish.",
+      },
+    ],
+    after_title: "Xariddan keyin ham yoningizdamiz",
+    after: [
+      "Logistika va O'zbekistongacha yetkazib berish",
+      "Ehtiyot qismlar va qo'shimcha uskunani topish",
+      "Xomashyo va qadoq yetkazib beruvchilarini topish",
+      "Xitoy bilan ishlashdagi boshqa masalalar",
+    ],
+  },
+  cta: {
+    title: "Shu biznesni boshlamoqchimisiz?",
+    text: "Bot orqali yozing: qaysi variant sizga yaqin va qancha mablag' bilan boshlamoqchisiz. Uskuna va zavodni tanlashda qanday yordam bera olishimizni aytib beramiz.",
+    button: "Biznesni muhokama qilmoqchiman",
+  },
+};

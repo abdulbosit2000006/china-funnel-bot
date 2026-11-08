@@ -44,6 +44,7 @@ export function manufacturingPrompt(today: string, target: Candidate | string): 
    - revenue_costs: налог с оборота или другие платежи в % от выручки, если нашёл применимый режим;
    - production: hours_per_day, shifts_per_day, working_days_per_month, utilization_base (обычно 0.6–0.75), scrap_pct; label этих допущений обычно ASSUMPTION.
 5. Процесс производства по шагам (process), требования к помещению (facility: площадь, электричество 380 В, вода, газ, вентиляция), риски (risks), что проверить до инвестиций (verify_before_investment), 2–4 тезиса для поста (highlights) и проверенные цифры для поста с источником (post_stats).
+6. Необязательные блоки, если есть данные: fx (официальный курс ЦБ: usd_uzs, date, label, source), alternatives (вариант «маленький старт»: своё оборудование, capex, opex_monthly, production.utilization_base), market.channels (каналы продаж с ценой производителя за единицу), permits (регистрация, СЭС, сертификат, штрихкод — только с официальным источником, иначе UNKNOWN), roadmap (по месяцам), verdict (кому подходит и кому нет), у рисков level (LOW, MEDIUM, HIGH) и mitigation. Чего не нашёл — ставь UNKNOWN, не придумывай.
 
 Метки (label), строго:
 - VERIFIED: значение прочитано на официальной/первичной странице (производитель, госорган, налоговый кодекс).

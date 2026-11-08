@@ -1,0 +1,837 @@
+{
+  "slug": "yeryongoq-pastasi",
+  "title": "Yeryong'oq pastasi ishlab chiqarish",
+  "research_date": "2026-11-08",
+  "currency": "USD",
+  "fx": {
+    "usd_uzs": 11987.16,
+    "date": "07.11.2026",
+    "label": "VERIFIED",
+    "source": 1
+  },
+  "product": {
+    "name": "Yeryong'oq pastasi sexi",
+    "tagline": "Qovurilgan yeryong'oqdan qo'shimchasiz pasta: 250 grammlik shisha bankada do'konlar, marketplace va Telegram uchun",
+    "description": "Tozalangan xom yeryong'oq barabanda qovuriladi, sovutiladi, po'sti ajratiladi va kolloid tegirmonda pastaga aylantiriladi. Pasta 250 grammlik shisha bankalarga quyiladi. Modelda o'lchov birligi: 1 banka (250 g). Narxlar so'mda olingan va Markaziy bank kursi bo'yicha dollarga o'tkazilgan.",
+    "unit": "banka"
+  },
+  "equipment": {
+    "name": "Qovurish barabani Run-100 + kolloid tegirmon WSS-180",
+    "manufacturer": {
+      "value": "Zhengzhou Xiangkun Machinery Co., Ltd. (Henan, Xitoy)",
+      "label": "MARKET DATA",
+      "source": 3
+    },
+    "model": {
+      "value": "Run-100 va WSS-180",
+      "label": "MARKET DATA",
+      "source": 2
+    },
+    "image_url": "https://image.made-in-china.com/2f0j00UMeCcraKHGqh/High-Productivity-200-600kg-H-Olive-Peanut-Butter-Colloid-Mills-for-Sale.jpg",
+    "price": {
+      "value": 1796,
+      "label": "MARKET DATA",
+      "source": 2,
+      "note": "Run-100 $499 (1–4 dona) [2] + WSS-180 $1 297 (1 dona) [3]; yetkazish shartlari ko'rsatilmagan"
+    },
+    "capacity_per_hour": {
+      "value": 340,
+      "label": "ASSUMPTION",
+      "source": 2,
+      "note": "Cheklovchi bosqich: qovurish barabani 100 kg/soat [2]. 100 kg × 85% chiqish (faraz) ÷ 0,25 kg = 340 banka/soat. Chiqish foizi manbada topilmadi."
+    },
+    "power_kw": {
+      "value": 19.25,
+      "label": "MARKET DATA",
+      "source": 3,
+      "note": "Run-100 0,75 kVt [2] + WSS-180 18,5 kVt [3]"
+    },
+    "area_m2": {
+      "value": 60,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "Xomashyo ombori, qovurish, maydalash va qadoqlash joyi"
+    },
+    "operators": {
+      "value": 3,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    "weight": {
+      "value": "Run-100: 100 kg; WSS-180: 430 kg",
+      "label": "MARKET DATA",
+      "source": 3
+    },
+    "automation": {
+      "value": "Qovurish va maydalash mashinada; po'st ajratish, sovutish va qadoqlash qo'lda",
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    "installation": {
+      "value": "Ikkala uskuna alohida, poydevor talab qilinmaydi deb faraz qilindi; WSS-180 uchun 380 V kerak",
+      "label": "ASSUMPTION",
+      "source": 3
+    },
+    "lead_time": {
+      "value": "Sotuvchi sahifasida: «tovarni 15 kun ichida jo'nata oladi» (sotuvchi bo'yicha, aniq mahsulot uchun emas) + yo'l",
+      "label": "MARKET DATA",
+      "source": 4
+    },
+    "warranty": {
+      "value": "Sahifada 1 yil; kompaniya ta'rifida 24 oy deb ham yozilgan. Shartnomada aniqlang",
+      "label": "MARKET DATA",
+      "source": 3
+    },
+    "included": [
+      "Qovurish barabani Run-100: 100 kg/soat, 0,75 kVt, 220 V, suyultirilgan gaz yoki ko'mir bilan isitiladi [2]",
+      "Kolloid tegirmon WSS-180: 18,5 kVt, 380 V, 430 kg [3]"
+    ],
+    "additional_equipment": [
+      "Qovurilgan yeryong'oq uchun quruq po'st ajratgich: narxi topilmadi",
+      "Sovutish stoli yoki tog'orasi",
+      "Tarozi, qadoqlash stoli, banka yopish asboblari"
+    ],
+    "raw_materials": [
+      {
+        "name": "Yeryong'oq, tozalangan, xom",
+        "spec": "250 g pasta uchun ~294 g (85% chiqish, faraz)",
+        "price": {
+          "value": "$1,11/kg: O'zbekistonning 2024 yilgi import narxi (savdo statistikasi). Mahalliy ulgurji narx topilmadi",
+          "label": "ESTIMATED",
+          "source": 9
+        }
+      },
+      {
+        "name": "Shisha banka 250 ml",
+        "spec": "Burama qopqoqli",
+        "price": {
+          "value": "2 500 so'm (faraz). Narx manbada topilmadi",
+          "label": "ASSUMPTION",
+          "source": null
+        }
+      },
+      {
+        "name": "Metall qopqoq",
+        "spec": "Konservatsiya qopqog'i",
+        "price": {
+          "value": "500 so'mdan (prom.uz, birligi ko'rsatilmagan)",
+          "label": "MARKET DATA",
+          "source": 10
+        }
+      },
+      {
+        "name": "Etiketka",
+        "spec": "O'z-o'zidan yopishadigan, rangli",
+        "price": {
+          "value": "300 so'm (faraz)",
+          "label": "ASSUMPTION",
+          "source": null
+        }
+      }
+    ]
+  },
+  "alternatives": [
+    {
+      "key": "start",
+      "title": "Kichik start",
+      "summary": "Talabni sinash uchun: bitta qovurish barabani va kichik kolloid tegirmon, 2 kishi, kichik xona. Sotuv rejasi oyiga ~2 500 banka (faraz). Uskunaga 1 ming dollardan kam.",
+      "equipment_name": "Run-100 + kolloid tegirmon WSS-50 (10–15 kg/soat)",
+      "capacity_per_hour": {
+        "value": 40,
+        "label": "MARKET DATA",
+        "source": 4,
+        "note": "WSS-50: 10–15 kg/soat [4], pastroq chegara olingan: 10 kg ÷ 0,25 kg = 40 banka/soat"
+      },
+      "power_kw": {
+        "value": 1.85,
+        "label": "MARKET DATA",
+        "source": 4,
+        "note": "Run-100 0,75 kVt + WSS-50 1,1 kVt"
+      },
+      "capex": [
+        {
+          "key": "roaster",
+          "title": "Qovurish barabani Run-100",
+          "amount": 499,
+          "label": "MARKET DATA",
+          "source": 2
+        },
+        {
+          "key": "mill",
+          "title": "Kolloid tegirmon WSS-50",
+          "amount": 468,
+          "label": "MARKET DATA",
+          "source": 4
+        },
+        {
+          "key": "delivery",
+          "title": "Yetkazib berish Xitoy → Toshkent (yig'ma yuk)",
+          "amount": 600,
+          "label": "ASSUMPTION",
+          "source": null
+        },
+        {
+          "key": "customs",
+          "title": "Bojxona to'lovlari va QQS",
+          "amount": 188,
+          "label": "ASSUMPTION",
+          "source": null,
+          "note": "12% × (uskuna + yetkazish); stavka rasmiy manbada tekshirilmadi"
+        },
+        {
+          "key": "room",
+          "title": "Xonani tayyorlash (yuviladigan devor, rakovina, ventilyatsiya)",
+          "amount": 800,
+          "label": "ASSUMPTION",
+          "source": null
+        },
+        {
+          "key": "tools",
+          "title": "Tarozi, stollar, idishlar",
+          "amount": 200,
+          "label": "ASSUMPTION",
+          "source": null
+        },
+        {
+          "key": "permits",
+          "title": "Ro'yxatdan o'tish, SES xulosasi, shtrix-kod",
+          "amount": null,
+          "label": "UNKNOWN",
+          "source": 14
+        },
+        {
+          "key": "stock",
+          "title": "Aylanma mablag': 1 oylik xomashyo va qadoq",
+          "amount": 1521,
+          "label": "ASSUMPTION",
+          "source": null,
+          "note": "2 528 banka × $0,60"
+        },
+        {
+          "key": "brand",
+          "title": "Brend va etiketka dizayni",
+          "amount": 200,
+          "label": "ASSUMPTION",
+          "source": null
+        }
+      ],
+      "opex_monthly": [
+        {
+          "key": "rent",
+          "title": "Xona ijarasi (~25 m²)",
+          "amount": 150,
+          "label": "ASSUMPTION",
+          "source": null
+        },
+        {
+          "key": "salary",
+          "title": "Ish haqi: 2 kishi × 4 mln so'm",
+          "amount": 667,
+          "label": "ASSUMPTION",
+          "source": 12,
+          "note": "Eng kam ish haqi 2026-yil 1-sentabrdan 1 360 000 so'm [12]"
+        },
+        {
+          "key": "social",
+          "title": "Ijtimoiy soliq (12%, faraz)",
+          "amount": 80,
+          "label": "ASSUMPTION",
+          "source": null
+        },
+        {
+          "key": "marketing",
+          "title": "Reklama (Instagram, Telegram)",
+          "amount": 100,
+          "label": "ASSUMPTION",
+          "source": null
+        },
+        {
+          "key": "other",
+          "title": "Boshqa (aloqa, transport)",
+          "amount": 50,
+          "label": "ASSUMPTION",
+          "source": null
+        }
+      ],
+      "production": {
+        "utilization_base": 0.31
+      }
+    }
+  ],
+  "highlights": [
+    "Retsept oddiy: faqat qovurilgan yeryong'oq. Bozordagi mahalliy Ermak pastasi ham «shakarsiz» deb sotiladi.",
+    "Uzum Marketda yeryong'oq pastasi 235–300 g uchun 31 990 dan 79 380 so'mgacha sotilmoqda: mahalliy va import brendlar yonma-yon.",
+    "Asosiy ikki uskuna Xitoy marketplace'ida jami $1 796: qovurish barabani $499 va kolloid tegirmon $1 297.",
+    "Kichik start varianti bilan uskunaga 1 ming dollardan kam pul tikib, talabni tekshirish mumkin."
+  ],
+  "market": {
+    "summary": "Uzum Marketda yeryong'oq pastasining kamida 25 ta mahsuloti bor: mahalliy Ermak va importga o'xshash brendlar. Bozor hajmi va import bo'yicha rasmiy statistika topilmadi, shuning uchun talab sotuvchilar soni va narxlar bo'yicha baholangan.",
+    "selling_price_per_unit": {
+      "value": 1.8353,
+      "label": "ESTIMATED",
+      "source": 5,
+      "note": "22 000 so'm do'konga ulgurji narx: Ermak chakana narxi 31 990 so'm / 235 g = 136 so'm/g [5] → 250 g ≈ 34 000 so'm; ulgurji = chakananing ~65% (faraz)"
+    },
+    "wholesale_price": {
+      "value": 2.8364,
+      "label": "ESTIMATED",
+      "source": 5,
+      "note": "250 g uchun chakana narx ≈ 34 000 so'm (Ermak narxidan grammga qayta hisob)"
+    },
+    "demand_indicators": [
+      {
+        "value": "Ermak (O'zbekiston), 235 g: 31 990 so'm; do'kon reytingi 4.8, 3 819 sharh",
+        "label": "MARKET DATA",
+        "source": 5
+      },
+      {
+        "value": "Mr.Yummy, 250 g: 40 000 so'm",
+        "label": "MARKET DATA",
+        "source": 7
+      },
+      {
+        "value": "American Harvest, 340 g: 45 000 so'm",
+        "label": "MARKET DATA",
+        "source": 6
+      },
+      {
+        "value": "Mager, shakarsiz, 300 g: 79 380 so'm",
+        "label": "MARKET DATA",
+        "source": 8
+      }
+    ],
+    "competitors": [
+      {
+        "name": "Ermak (mahalliy)",
+        "note": "Uzum'da o'z do'koni, 235 g banka, «shakarsiz»",
+        "source": 5
+      },
+      {
+        "name": "Nuteco Premium (mahalliy)",
+        "note": "prom.uz'da yeryong'oq va boshqa yong'oq pastalari, hozir «mavjud emas»",
+        "source": 16
+      },
+      {
+        "name": "American Harvest, Mr.Yummy, Mager",
+        "note": "Uzum'da sotiladi; ishlab chiqaruvchi mamlakati sahifada ko'rsatilmagan",
+        "source": 6
+      }
+    ],
+    "imports_local": {
+      "value": "Yeryong'oq pastasi importi (HS 2008.11) bo'yicha rasmiy statistika topilmadi",
+      "label": "UNKNOWN",
+      "source": null
+    },
+    "customers": [
+      "Sog'lom ovqatlanish va sport bilan shug'ullanuvchilar",
+      "Oziq-ovqat do'konlari va minimarketlar",
+      "Qandolatchilar va kafelar (kg bilan)"
+    ],
+    "distribution": "Avval Uzum va Telegram orqali, keyin do'konlarga ulgurji.",
+    "channels": [
+      {
+        "name": "Uzum Market / Telegram",
+        "note": "Chakana narx, lekin marketplace komissiyasi va yetkazish xarajati bor (summasi aniqlanmagan)",
+        "price": {
+          "value": 2.8364,
+          "label": "ESTIMATED",
+          "source": 5
+        }
+      },
+      {
+        "name": "Do'konlar (ulgurji)",
+        "note": "Modeldagi asosiy narx",
+        "price": {
+          "value": 1.8353,
+          "label": "ESTIMATED",
+          "source": 5
+        }
+      },
+      {
+        "name": "Qandolatchilar, kafelar",
+        "note": "Kg bilan sotiladi; narx topilmadi",
+        "price": {
+          "value": null,
+          "label": "UNKNOWN",
+          "source": null
+        }
+      }
+    ],
+    "risks": [],
+    "limitations": [
+      "Xom yeryong'oqning mahalliy ulgurji narxi topilmadi: modelda 2024 yilgi import narxi $1,11/kg ishlatilgan",
+      "Shisha banka va etiketka narxi topilmadi (faraz)",
+      "Qovurish va po'st ajratishdagi yo'qotish (chiqish foizi) manbada topilmadi: 85% faraz",
+      "Soliq va bojxona stavkalari 2026 yil uchun rasmiy manbada tekshirilmadi"
+    ]
+  },
+  "capex": [
+    {
+      "key": "roaster",
+      "title": "Qovurish barabani Run-100",
+      "amount": 499,
+      "label": "MARKET DATA",
+      "source": 2,
+      "note": "1–4 dona uchun narx"
+    },
+    {
+      "key": "mill",
+      "title": "Kolloid tegirmon WSS-180",
+      "amount": 1297,
+      "label": "MARKET DATA",
+      "source": 3
+    },
+    {
+      "key": "peeler",
+      "title": "Quruq po'st ajratgich",
+      "amount": null,
+      "label": "UNKNOWN",
+      "source": 17,
+      "note": "Shu sotuvchidagi $1 699 lik model ho'l usulda ishlaydi (bodom uchun)"
+    },
+    {
+      "key": "delivery",
+      "title": "Yetkazib berish Xitoy → Toshkent (yig'ma yuk)",
+      "amount": 1500,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "customs",
+      "title": "Bojxona to'lovlari va QQS",
+      "amount": 396,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "12% × (uskuna + yetkazish); stavka rasmiy manbada tekshirilmadi"
+    },
+    {
+      "key": "room",
+      "title": "Sexni tayyorlash (devor, pol, rakovina, ventilyatsiya, 380 V)",
+      "amount": 2000,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "tools",
+      "title": "Tarozi, stollar, sovutish idishlari",
+      "amount": 500,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "permits",
+      "title": "Ro'yxatdan o'tish, SES xulosasi, shtrix-kod",
+      "amount": null,
+      "label": "UNKNOWN",
+      "source": 14,
+      "note": "Rasmiy to'lov summalari topilmadi"
+    },
+    {
+      "key": "stock",
+      "title": "Aylanma mablag': 1 oylik xomashyo va qadoq",
+      "amount": 3629,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "6 030 banka × $0,60"
+    },
+    {
+      "key": "brand",
+      "title": "Brend va etiketka dizayni",
+      "amount": 300,
+      "label": "ASSUMPTION",
+      "source": null
+    }
+  ],
+  "opex_monthly": [
+    {
+      "key": "rent",
+      "title": "Sex ijarasi (~60 m²)",
+      "amount": 300,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "salary",
+      "title": "Ish haqi: 3 kishi × 4 mln so'm",
+      "amount": 1001,
+      "label": "ASSUMPTION",
+      "source": 12,
+      "note": "Eng kam ish haqi 2026-yil 1-sentabrdan 1 360 000 so'm [12]"
+    },
+    {
+      "key": "social",
+      "title": "Ijtimoiy soliq (12%, faraz)",
+      "amount": 120,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "marketing",
+      "title": "Reklama va marketplace'da reklama",
+      "amount": 150,
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "key": "other",
+      "title": "Boshqa (aloqa, transport, buxgalteriya)",
+      "amount": 100,
+      "label": "ASSUMPTION",
+      "source": null
+    }
+  ],
+  "variable_costs": [
+    {
+      "key": "peanut",
+      "title": "Yeryong'oq (~294 g xom → 250 g pasta)",
+      "amount": 0.3265,
+      "label": "ESTIMATED",
+      "source": 9,
+      "note": "0,294 kg × $1,11/kg (2024 import narxi). Mahalliy narx boshqacha bo'lishi mumkin"
+    },
+    {
+      "key": "jar",
+      "title": "Shisha banka 250 ml",
+      "amount": 0.2086,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "2 500 so'm"
+    },
+    {
+      "key": "lid",
+      "title": "Qopqoq",
+      "amount": 0.0417,
+      "label": "MARKET DATA",
+      "source": 10,
+      "note": "500 so'm"
+    },
+    {
+      "key": "label",
+      "title": "Etiketka",
+      "amount": 0.025,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "300 so'm"
+    },
+    {
+      "key": "gas",
+      "title": "Qovurish uchun gaz",
+      "amount": null,
+      "label": "UNKNOWN",
+      "source": 11,
+      "note": "Gaz narxi 2 000 so'm/m³ [11], lekin barabanning gaz sarfi sahifada ko'rsatilmagan"
+    }
+  ],
+  "revenue_costs": [
+    {
+      "key": "turnover_tax",
+      "title": "Aylanmadan olinadigan soliq",
+      "pct": 4,
+      "label": "ASSUMPTION",
+      "source": null,
+      "note": "2026 yil stavkasi rasmiy manbada tekshirilmadi"
+    }
+  ],
+  "production": {
+    "hours_per_day": 8,
+    "shifts_per_day": 1,
+    "working_days_per_month": 26,
+    "utilization_base": 0.087,
+    "scrap_pct": 2,
+    "electricity_price_kwh": {
+      "value": 0.0918,
+      "label": "VERIFIED",
+      "source": 11,
+      "note": "1 100 so'm/kVt·soat, I–II guruh iste'molchilar, 2026-yil 1-iyundan"
+    },
+    "label": "ASSUMPTION",
+    "source": null,
+    "note": "Cheklov uskuna emas, sotuv. Sotuv rejasi (faraz): oyiga ~6 000 banka, kuniga ~230 banka. Elektr uskunalar 8 soat to'liq ishlaydi deb hisoblangan (ehtiyotkor hisob)."
+  },
+  "scenarios": [
+    0.04,
+    0.087,
+    0.15
+  ],
+  "process": [
+    {
+      "step": "Saralash",
+      "text": "Xom yeryong'oq tosh va buzilgan donlardan tozalanadi."
+    },
+    {
+      "step": "Qovurish",
+      "text": "Barabanli qovurgichda bir tekis qovuriladi."
+    },
+    {
+      "step": "Sovutish va po'st ajratish",
+      "text": "Yeryong'oq sovutiladi va qizil po'sti ajratiladi (start variantida qo'lda)."
+    },
+    {
+      "step": "Maydalash",
+      "text": "Kolloid tegirmonda bir jinsli pastaga aylanadi."
+    },
+    {
+      "step": "Qadoqlash",
+      "text": "Pasta bankalarga quyiladi, yopiladi, etiketka va partiya raqami qo'yiladi."
+    }
+  ],
+  "facility": [
+    {
+      "title": "Maydon",
+      "value": "~60 m²: xomashyo, qovurish, maydalash va qadoqlash zonalari",
+      "label": "ASSUMPTION",
+      "source": null
+    },
+    {
+      "title": "Elektr",
+      "value": "380 V (WSS-180 uchun)",
+      "label": "MARKET DATA",
+      "source": 3
+    },
+    {
+      "title": "Isitish",
+      "value": "Run-100 suyultirilgan gaz yoki ko'mir bilan ishlaydi",
+      "label": "MARKET DATA",
+      "source": 2
+    },
+    {
+      "title": "Sanitariya",
+      "value": "Yuviladigan sirtlar, qo'l yuvish joyi, ventilyatsiya",
+      "label": "ASSUMPTION",
+      "source": null
+    }
+  ],
+  "permits": [
+    {
+      "title": "Tadbirkor sifatida ro'yxatdan o'tish",
+      "text": "YaTT yoki MChJ: davlat xizmatlari markazi yoki onlayn tizim orqali.",
+      "label": "VERIFIED",
+      "source": 13
+    },
+    {
+      "title": "Sanitariya-epidemiologik xulosa",
+      "text": "my.gov.uz'da alohida xizmat: O'zbekistonda ishlab chiqarilgan oziq-ovqat mahsulotlariga xulosa berish. Hujjatlar ro'yxati va to'lov sahifada ko'rinmadi.",
+      "label": "VERIFIED",
+      "source": 14
+    },
+    {
+      "title": "Shtrix-kod",
+      "text": "GS1 Uzbekistan a'zoligi orqali korxona prefiksi olinadi; kodlarni vositachilardan sotib olmaslik tavsiya etiladi.",
+      "label": "VERIFIED",
+      "source": 15
+    },
+    {
+      "title": "Mahsulot sertifikati",
+      "text": "Majburiy sertifikatlash talabi rasmiy manbada tekshirilmadi: O'zstandart agentligidan so'rang.",
+      "label": "UNKNOWN",
+      "source": null
+    },
+    {
+      "title": "Uyda ishlab chiqarish",
+      "text": "Uy sharoitida ishlab chiqarib do'konga sotishga ruxsat borligi rasmiy manbada topilmadi: SES'dan so'rang.",
+      "label": "UNKNOWN",
+      "source": null
+    }
+  ],
+  "roadmap": [
+    {
+      "period": "1-oy",
+      "stage": "Tayyorgarlik",
+      "tasks": "Ro'yxatdan o'tish, 3 ta yetkazib beruvchidan xom yeryong'oq narxi, zavoddan yozma taklif (quotation), xona tanlash."
+    },
+    {
+      "period": "2-oy",
+      "stage": "Uskuna va xona",
+      "tasks": "Uskunani buyurtma qilish va olib kelish, xonani tayyorlash, SES xulosasiga ariza."
+    },
+    {
+      "period": "3-oy",
+      "stage": "Sinov",
+      "tasks": "Sinov partiyalari, chiqish foizini o'lchash, laboratoriyada saqlash muddatini aniqlash, etiketka va shtrix-kod."
+    },
+    {
+      "period": "4–6-oy",
+      "stage": "Sotuvga chiqish",
+      "tasks": "Uzum va Telegram'da sotuv, 10–20 do'kon bilan sinov savdosi, qaytgan xaridorlarni hisoblash."
+    },
+    {
+      "period": "6-oydan",
+      "stage": "Kengayish",
+      "tasks": "Sotuv hajmiga qarab po'st ajratgich va qadoqlash uskunasini qo'shish."
+    }
+  ],
+  "risks": [
+    {
+      "title": "Xomashyo narxi",
+      "text": "Mahalliy ulgurji narx topilmadi, modelda import narxi ishlatilgan.",
+      "level": "HIGH",
+      "mitigation": "Kamida 3 ta yetkazib beruvchidan narx oling; «Agar sharoit o'zgarsa» jadvalida +20% ta'sirini ko'ring."
+    },
+    {
+      "title": "Sotuv hajmi",
+      "text": "Asosiy ssenariy oyiga ~6 000 banka sotishni talab qiladi; bu bizning farazimiz, yangi brend uchun tekshirilmagan.",
+      "level": "HIGH",
+      "mitigation": "Kichik start variantidan boshlang, sotuv o'sgach katta tegirmonga o'ting."
+    },
+    {
+      "title": "Po'st ajratish",
+      "text": "Quruq po'st ajratgichning narxi topilmadi; shu sotuvchidagi model ho'l usulda ishlaydi.",
+      "level": "MEDIUM",
+      "mitigation": "Zavoddan aynan qovurilgan yeryong'oq uchun quruq model va video so'rang."
+    },
+    {
+      "title": "Uskuna ma'lumotlaridagi ziddiyat",
+      "text": "WSS-180 quvvati ikki sahifada har xil (200–600 va 800–1000 kg/soat), kafolat 1 yil va 24 oy.",
+      "level": "MEDIUM",
+      "mitigation": "Yozma taklif va shartnomada quvvat, to'plam va kafolatni aniq yozdiring."
+    },
+    {
+      "title": "Sifat va saqlash muddati",
+      "text": "Pastada yog' ajralishi va oksidlanish bo'lishi mumkin.",
+      "level": "MEDIUM",
+      "mitigation": "Saqlash muddatini laboratoriyada aniqlang, sinov partiyalarini 1–2 oy kuzating."
+    }
+  ],
+  "verdict": {
+    "fits": [
+      "Oziq-ovqat ishlab chiqarish yoki savdo tajribasi borlarga",
+      "Uzum, Telegram yoki do'konlar orqali sotuv kanali borlarga",
+      "Avval kichik startda talabni sinab ko'rishga tayyorlarga"
+    ],
+    "not_fits": [
+      "Tez va kafolatli daromad kutayotganlarga",
+      "Sotuv kanalisiz faqat ishlab chiqarishni rejalashtirganlarga",
+      "Sanitariya talablari va hujjatlarga vaqt ajrata olmaydiganlarga"
+    ]
+  },
+  "verify_before_investment": [
+    "Xom yeryong'oq narxini kamida 3 ta mahalliy yetkazib beruvchidan oling",
+    "Zavoddan yozma taklif: quvvat, to'plam, kafolat, yetkazish shartlari",
+    "Qovurilgan yeryong'oq uchun quruq po'st ajratgich narxi va videosi",
+    "Bojxona to'lovlari va soliq stavkasini broker va buxgalter bilan hisoblang",
+    "SES va sertifikat talablarini va to'lovlarini rasmiy idoralardan so'rang",
+    "Shisha banka, qopqoq va etiketka narxini yetkazib beruvchilardan oling",
+    "Sinov partiyasida chiqish foizini (xom yeryong'oqdan pasta) o'lchang"
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "title": "O'zbekiston Respublikasi Markaziy banki: valyuta kurslari (USD, 07.11.2026)",
+      "url": "https://cbu.uz/en/arkhiv-kursov-valyut/json/",
+      "type": "OFFICIAL",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 2,
+      "title": "Made-in-China: qovurish barabani Run-100, Zhengzhou Xiangkun",
+      "url": "https://machineking.en.made-in-china.com/product/tOdTomVlazaU/China-Commercial-Large-Nut-Roaster-Grain-Roaster-Capacity-Roller-Nut-Roasting-Machine.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 3,
+      "title": "Made-in-China: kolloid tegirmon WSS-180, Zhengzhou Xiangkun",
+      "url": "https://machineking.en.made-in-china.com/product/ytOrQBpZfYcs/China-High-Productivity-200-600kg-H-Olive-Peanut-Butter-Colloid-Mills-for-Sale.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 4,
+      "title": "Made-in-China: kolloid tegirmon WSS-50, Zhengzhou Xiangkun",
+      "url": "https://machineking.en.made-in-china.com/product/uAarWPBcYgkS/China-High-Output-Automatic-Chili-Sesame-Cashew-Peanut-Butter-Maker-Machine.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 5,
+      "title": "Uzum Market: Ermak yeryong'oq pastasi, 235 g",
+      "url": "https://uzum.uz/ru/product/pasta-arakhisovaya-ermak-235-gr-1810907",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 6,
+      "title": "Uzum Market: American Harvest, 340 g",
+      "url": "https://uzum.uz/ru/product/arakhisovaya-pasta-american-1670198",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 7,
+      "title": "Uzum Market: Mr.Yummy, 250 g",
+      "url": "https://uzum.uz/ru/product/arakhisovaya-pasta-mryummy-250-g-2368494",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 8,
+      "title": "Uzum Market: Mager, shakarsiz, 300 g",
+      "url": "https://uzum.uz/ru/product/mager-krempasta-arakhisovaya-bez-sakhara-300-2586748",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 9,
+      "title": "Tridge: O'zbekiston, xom yeryong'oq narxlari (eksport/import)",
+      "url": "https://dir.tridge.com/prices/raw-peanuts/UZ",
+      "type": "SECONDARY",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 10,
+      "title": "Prom.uz: konservatsiya uchun metall qopqoqlar",
+      "url": "https://www.prom.uz/ads/kryshki-metallicheskie-dlya-konservatsii-sko/",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 11,
+      "title": "Energetika vazirligi: 2026-yil 1-iyundan elektr va gaz narxlari",
+      "url": "https://gov.uz/ru/minenergy/news/view/165918",
+      "type": "OFFICIAL",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 12,
+      "title": "Buxgalter.uz: BHM, eng kam ish haqi (2026-yil 1-sentabrdan)",
+      "url": "https://buxgalter.uz/publish/doc/text189777_razmery_brv_mrot_bvip_i_mpr_v_uzbekistane",
+      "type": "SECONDARY",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 13,
+      "title": "Gov.uz: tadbirkorlik subyektlarini davlat ro'yxatidan o'tkazish",
+      "url": "https://gov.uz/oz/pages/Tadbirkorlik_subyektlarini_davlat_royxatidan_otkazish",
+      "type": "OFFICIAL",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 14,
+      "title": "My.gov.uz: oziq-ovqat mahsulotlariga sanitariya-epidemiologik xulosa",
+      "url": "https://my.gov.uz/uz/service/1162",
+      "type": "OFFICIAL",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 15,
+      "title": "GS1 Uzbekistan: EAN/GTIN shtrix-kodlari",
+      "url": "https://gs1uz.org/ru/standards/ean-gtin",
+      "type": "OFFICIAL",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 16,
+      "title": "Prom.uz: Nuteco Premium yeryong'oq pastasi",
+      "url": "https://www.prom.uz/ads/arakhisovaya-pasta/",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    },
+    {
+      "id": 17,
+      "title": "Made-in-China: po'st ajratgich WSJG-200 (ho'l usul), Zhengzhou Xiangkun",
+      "url": "https://machineking.en.made-in-china.com/product/xaVUTSJAFtkb/China-Small-Scale-Roasted-Peanut-Peeling-Machine-Commercial-Soybean-Almond-Nuts-Skin-Removing-Peeler-Machine-Price.html",
+      "type": "MARKETPLACE",
+      "retrieved_at": "2026-11-08"
+    }
+  ]
+}

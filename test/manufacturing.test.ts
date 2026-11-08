@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import example from "../src/ai/manufacturing-example.json";
 import { manufacturingDiscoverPrompt, manufacturingPrompt } from "../src/ai/prompts-manufacturing";
-import { DEFAULT_CONTENT } from "../src/pdf/content";
+import { BUSINESS_CONTENT, DEFAULT_CONTENT } from "../src/pdf/content";
 import { calculateManufacturing, moneyUnit, validateManufacturing, type ManufacturingResearch } from "../src/pdf/manufacturing";
 import { manufacturingFooter, renderManufacturingHtml } from "../src/pdf/manufacturing-template";
 import fixture from "./fixtures/manufacturing-research.json";
+import peanutJson from "../docs/research/peanut-paste.json";
 
 const research = () => structuredClone(fixture) as unknown as ManufacturingResearch;
 const brand = { name: "MERIDIAN", mark: "M", botUsername: "test_bot" };
@@ -151,24 +152,24 @@ describe("manufacturing PDF template", () => {
   it("contains every section, the numbers and the disclaimer", () => {
     for (const section of [
       "Qisqacha xulosa",
-      "Mahsulot",
-      "Tanlangan liniya",
-      "Texnik ko'rsatkichlar",
-      "Joy va infratuzilma",
-      "Xomashyo",
+      "Raqamlar qanchalik ishonchli",
+      "Mahsulot va bozor",
+      "Uskuna",
+            "Joy va infratuzilma",
+      "Xomashyo va jarayon",
       "Ishlab chiqarish jarayoni",
-      "O'zbekiston bozori",
       "Boshlang'ich investitsiya (CAPEX)",
-      "Oylik doimiy xarajatlar (OPEX)",
-      "Ishlab chiqarish quvvati",
-      "Birlik iqtisodiyoti",
+      "Oylik doimiy xarajatlar",
+      "Ishlab chiqarish hajmi",
+      "tannarxi",
       "Tushum va foyda",
       "Yalpi foyda",
       "OPERATSION FOYDA",
       "Zararsizlik nuqtasi",
       "Qoplanish muddati",
-      "Ssenariylar",
-      "Xavflar",
+      "Agar sharoit o'zgarsa",
+      "Sotuv hajmiga qarab",
+      "Xavflar va ularni kamaytirish",
       "Investitsiyadan oldin nimani tekshirish kerak",
       "Manbalar va belgilar",
       DEFAULT_CONTENT.services.title,
@@ -179,7 +180,7 @@ describe("manufacturing PDF template", () => {
     expect(html).toContain("$4 497");
     expect(html).toContain("11.8 oy");
     expect(html).toContain("Dastlabki model, investitsiya kafolati emas");
-    expect(html).toContain("Ishlab chiqaruvchi rasmi");
+    expect(html).toContain("Ishlab chiqaruvchi sahifasidagi rasm");
     expect(html).toContain('src="https://www.example-machines.cn/images/zb-12-paper-cup.jpg"');
     expect(html).toContain("onerror=");
     expect(html).toContain("NAMUNA");
@@ -193,7 +194,7 @@ describe("manufacturing PDF template", () => {
     delete real.equipment.image_url;
     const out = renderManufacturingHtml(real, calculateManufacturing(real), brand, DEFAULT_CONTENT);
     expect(out).not.toContain("NAMUNA");
-    expect(out).not.toContain("Ishlab chiqaruvchi rasmi");
+    expect(out).not.toContain("Ishlab chiqaruvchi sahifasidagi rasm");
     expect(renderManufacturingHtml(data, model, brand, DEFAULT_CONTENT, { imageSrc: null })).not.toContain("<img");
     expect(renderManufacturingHtml(data, model, brand, DEFAULT_CONTENT, { imageSrc: "data:image/png;base64,AAAA" })).toContain(
       'src="data:image/png;base64,AAAA"',
@@ -258,5 +259,51 @@ describe("manufacturing prompts", () => {
     expect(p).toContain("CALCULATED не используй");
     expect(p).toContain("egg-tray-line-example");
     expect(manufacturingPrompt("2026-10-03", "tuxum taglik")).toContain("«tuxum taglik»");
+  });
+});
+
+describe("business model: start variant, what-if, trust and so'm", () => {
+  const peanut = peanutJson as unknown;
+  const v = validateManufacturing(peanut);
+  if (!v.ok) throw new Error(v.errors.join("\n"));
+  const m = calculateManufacturing(v.data);
+
+  it("computes the start variant with the same model", () => {
+    expect(m.alternatives).toHaveLength(1);
+    const a = m.alternatives[0]!.model;
+    expect(a.capex.total).toBeLessThan(m.capex.total);
+    expect(a.month.units).toBeLessThan(m.month.units);
+    expect(a.unit.price).toBe(m.unit.price);
+    expect(a.alternatives).toEqual([]);
+  });
+
+  it("what-if lines move the right way", () => {
+    const [base, price, volume, variable, fixed, capex] = m.sensitivity;
+    expect(base!.operating_profit).toBe(m.month.operating_profit.value);
+    for (const r of [price, volume, variable, fixed]) expect(r!.operating_profit).toBeLessThan(base!.operating_profit);
+    expect(capex!.operating_profit).toBe(base!.operating_profit);
+    expect(capex!.payback_months!).toBeGreaterThan(base!.payback_months!);
+  });
+
+  it("trust bars add up and count unknown rows", () => {
+    for (const t of m.trust) expect(Math.abs(t.sourced + t.estimated + t.assumed - t.total)).toBeLessThanOrEqual(2);
+    expect(m.trust[0]!.total).toBe(m.capex.total);
+    expect(m.trust[0]!.unknown_count).toBe(2);
+  });
+
+  it("renders so'm, the comparison, permits, roadmap and the honest fit", () => {
+    const html = renderManufacturingHtml(v.data, m, brand, BUSINESS_CONTENT);
+    for (const s of ["Qaysi variant bilan boshlash kerak", "Kichik start", "Ruxsatnomalar va hujjatlar", "Ishga tushirish rejasi", "Kimga mos emas", "so'm", "Sotuv kanallari va narxi", BUSINESS_CONTENT.cta.button!])
+      expect(html, s).toContain(s);
+    expect(html).not.toMatch(/NaN|undefined/);
+  });
+
+  it("rejects a bad risk level and a bad alternative", () => {
+    const bad = structuredClone(peanut) as ManufacturingResearch;
+    bad.risks[0]!.level = "SEVERE" as never;
+    bad.alternatives![0]!.capacity_per_hour = { value: null, label: "UNKNOWN", source: null };
+    const r = validateManufacturing(bad);
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.join(" ")).toMatch(/risks\[0\]\.level.*|alternatives\[0\]\.capacity_per_hour/);
   });
 });

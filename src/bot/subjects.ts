@@ -2,7 +2,7 @@
 // Everything else (research flow, PDF review, posts, autopilot) is shared and looks the subject up here.
 import type { LeadMagnetRow, LeadMagnetType } from "../db";
 import { discoverPrompt, researchPrompt, type Candidate } from "../ai/prompts";
-import { DEFAULT_CONTENT, TRIP_CONTENT } from "../pdf/content";
+import { BUSINESS_CONTENT, DEFAULT_CONTENT, TRIP_CONTENT } from "../pdf/content";
 import { calculateBudget, money, validateResearch, type ExhibitionResearch } from "../pdf/exhibition";
 import { exhibitionCard, type CardData } from "../pdf/post-card";
 import { footerTemplate, renderExhibitionHtml, type Brand } from "../pdf/template";
@@ -104,7 +104,7 @@ const manufacturing: SubjectSpec = {
   renderPdf(raw, brand, imageSrc) {
     const data = raw as unknown as ManufacturingResearch;
     return {
-      html: renderManufacturingHtml(data, calculateManufacturing(data), brand, DEFAULT_CONTENT, { imageSrc: imageSrc ?? null }),
+      html: renderManufacturingHtml(data, calculateManufacturing(data), brand, BUSINESS_CONTENT, { imageSrc: imageSrc ?? null }),
       footer: manufacturingFooter(brand, data),
     };
   },

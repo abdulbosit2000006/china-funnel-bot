@@ -40,6 +40,23 @@ export interface Source {
   retrieved_at: string;
 }
 
+/** A cheaper or bigger setup next to the main line ("start small" vs "full line"). Computed by the same model. */
+export interface Alternative {
+  key: string;
+  title: string;
+  /** One or two sentences in Uzbek: who this setup is for. */
+  summary: string;
+  equipment_name: string;
+  capacity_per_hour: LabeledNumber;
+  power_kw?: LabeledNumber;
+  capex: MoneyInput[];
+  opex_monthly: MoneyInput[];
+  production?: Partial<Pick<ManufacturingResearch["production"], "hours_per_day" | "shifts_per_day" | "working_days_per_month" | "utilization_base" | "scrap_pct">>;
+}
+
+export const RISK_LEVELS = ["LOW", "MEDIUM", "HIGH"] as const;
+export type RiskLevel = (typeof RISK_LEVELS)[number];
+
 export interface ManufacturingResearch {
   slug: string;
   title: string;
@@ -54,6 +71,10 @@ export interface ManufacturingResearch {
     /** Unit word in Uzbek for all per-unit numbers: "dona", "kg", "m²"... */
     unit: string;
   };
+  /** Official exchange rate used to show so'm next to dollars (CBU). Inputs stay in USD. */
+  fx?: { usd_uzs: number; date: string; label: DataLabel; source: number | null };
+  /** Other setups compared with the main line (e.g. a start-small option). */
+  alternatives?: Alternative[];
   equipment: {
     name: string;
     manufacturer: Labeled;
@@ -103,6 +124,8 @@ export interface ManufacturingResearch {
     imports_local?: Labeled;
     customers: string[];
     distribution: string;
+    /** Sales channels with the producer's price per unit in each (USD). Shown as a table; the model uses selling_price_per_unit. */
+    channels?: { name: string; note: string; price: LabeledNumber }[];
     risks: string[];
     limitations: string[];
   };
@@ -131,7 +154,13 @@ export interface ManufacturingResearch {
   scenarios?: number[];
   process: { step: string; text: string }[];
   facility: { title: string; value: string; label: DataLabel; source: number | null }[];
-  risks: { title: string; text: string }[];
+  risks: { title: string; text: string; level?: RiskLevel; mitigation?: string }[];
+  /** Registration, sanitary and certification steps with official sources. */
+  permits?: { title: string; text: string; label: DataLabel; source: number | null }[];
+  /** First months, step by step. */
+  roadmap?: { period: string; stage: string; tasks: string }[];
+  /** Honest fit: who should and who should not start this business. */
+  verdict?: { fits: string[]; not_fits: string[] };
   verify_before_investment: string[];
   sources: Source[];
 }
@@ -155,6 +184,23 @@ export interface ScenarioRow {
   revenue_costs: number;
   gross_profit: number;
   fixed_costs: number;
+  operating_profit: number;
+  payback_months: number | null;
+}
+
+/** How much of a money total rests on sources (VERIFIED / MARKET DATA) vs estimates vs our assumptions. */
+export interface TrustBar {
+  title: string;
+  total: number;
+  sourced: number;
+  estimated: number;
+  assumed: number;
+  unknown_count: number;
+}
+
+/** One "what if" line: the base model with one input changed. */
+export interface SensitivityRow {
+  title: string;
   operating_profit: number;
   payback_months: number | null;
 }
@@ -196,6 +242,10 @@ export interface ManufacturingModel {
   break_even: { units: Calc; revenue: Calc; utilization: Calc; reason?: string };
   payback: Calc & { reason?: string };
   scenarios: ScenarioRow[];
+  /** What-if table: base and one change at a time. Empty for nested (alternative) models. */
+  sensitivity: SensitivityRow[];
+  trust: TrustBar[];
+  alternatives: { key: string; title: string; summary: string; equipment_name: string; model: ManufacturingModel }[];
   /** Weakest label among the inputs that made it into the numbers. */
   weakest: DataLabel;
   /** Uzbek warnings for the reader (incomplete totals, loss, etc.). */
@@ -233,7 +283,40 @@ export const pct = (x: number) => `${num(round1(x * 100))}%`;
 const isKnown = (x: { label: DataLabel }, v: number | null) => v !== null && x.label !== "UNKNOWN";
 const weaker = (a: DataLabel, b: DataLabel) => (DATA_LABELS.indexOf(b) > DATA_LABELS.indexOf(a) ? b : a);
 
+/** Base model plus the what-if table and the alternative setups. */
 export function calculateManufacturing(data: ManufacturingResearch): ManufacturingModel {
+  const base = calculateCore(data);
+  const run = (change: (d: ManufacturingResearch) => void) => {
+    const d = structuredClone(data);
+    delete d.alternatives;
+    change(d);
+    const m = calculateCore(d);
+    return { operating_profit: m.month.operating_profit.value!, payback_months: m.payback.value };
+  };
+  const scale = (rows: MoneyInput[], k: number) => rows.forEach((r) => r.amount !== null && (r.amount *= k));
+  base.sensitivity = [
+    { title: "Asosiy ssenariy", operating_profit: base.month.operating_profit.value!, payback_months: base.payback.value },
+    { title: "Sotish narxi 10% past", ...run((d) => void (d.market.selling_price_per_unit.value! *= 0.9)) },
+    { title: "Sotuv hajmi 30% kam", ...run((d) => void (d.production.utilization_base *= 0.7)) },
+    { title: "Xomashyo va qadoq 20% qimmat", ...run((d) => scale(d.variable_costs, 1.2)) },
+    { title: "Doimiy xarajatlar 20% ko'p", ...run((d) => scale(d.opex_monthly, 1.2)) },
+    { title: "Boshlang'ich investitsiya 20% ko'p", ...run((d) => scale(d.capex, 1.2)) },
+  ];
+  base.alternatives = (data.alternatives ?? []).map((a) => {
+    const d = structuredClone(data);
+    delete d.alternatives;
+    d.equipment.name = a.equipment_name;
+    d.equipment.capacity_per_hour = a.capacity_per_hour;
+    if (a.power_kw) d.equipment.power_kw = a.power_kw;
+    d.capex = a.capex;
+    d.opex_monthly = a.opex_monthly;
+    d.production = { ...d.production, ...a.production };
+    return { key: a.key, title: a.title, summary: a.summary, equipment_name: a.equipment_name, model: calculateCore(d) };
+  });
+  return base;
+}
+
+function calculateCore(data: ManufacturingResearch): ManufacturingModel {
   const p = data.production;
   const unit = data.product.unit;
   const warnings: string[] = [];
@@ -448,7 +531,29 @@ export function calculateManufacturing(data: ManufacturingResearch): Manufacturi
     };
   });
 
+  // How much of the money rests on sources. Monthly costs at base: fixed + electricity + variable × produced units + revenue %.
+  const bucket = (bar: TrustBar, label: DataLabel, amount: number) => {
+    if (label === "VERIFIED" || label === "MARKET DATA") bar.sourced += amount;
+    else if (label === "ASSUMPTION") bar.assumed += amount;
+    else bar.estimated += amount;
+    bar.total += amount;
+  };
+  const newBar = (title: string): TrustBar => ({ title, total: 0, sourced: 0, estimated: 0, assumed: 0, unknown_count: 0 });
+  const capexBar = newBar("Boshlang'ich investitsiya");
+  for (const r of capexRows) r.included ? bucket(capexBar, r.label, r.amount!) : capexBar.unknown_count++;
+  const costBar = newBar("Oylik xarajatlar");
+  for (const r of opexRows) r.included ? bucket(costBar, r.label, r.amount!) : costBar.unknown_count++;
+  if (electricity) bucket(costBar, weaker(kw.label, tariff!.label), electricityAmount);
+  const producedMonth = unitsMonthExact / good;
+  for (const r of varRows) r.included ? bucket(costBar, r.label, r.amount! * producedMonth) : costBar.unknown_count++;
+  for (const r of rcRows) r.included ? bucket(costBar, r.label, (m.revenue * r.pct!) / 100) : costBar.unknown_count++;
+  const round0 = (b: TrustBar): TrustBar => ({ ...b, total: round(b.total), sourced: round(b.sourced), estimated: round(b.estimated), assumed: round(b.assumed) });
+  const trust = [round0(capexBar), round0(costBar)];
+
   return {
+    sensitivity: [],
+    trust,
+    alternatives: [],
     capex: { rows: capexRows, total: capexTotal, excluded: capexExcluded, formula: `${listSum(capexRows, money)} = ${money(capexTotal)}` },
     opex: { rows: opexRows, total: opexTotal, excluded: opexExcluded, formula: opexFormula, electricity },
     variable: { rows: varRows, excluded: varExcluded, per_produced_unit: round4(varProduced), per_good_unit: unitEcon.variable },
@@ -647,6 +752,54 @@ export function validateManufacturing(raw: unknown): { ok: true; data: Manufactu
   if (!Array.isArray(d.risks) || d.risks.length === 0) errors.push("risks: нужен список рисков");
   else need(d.risks.every((r) => isObj(r) && str(r.title) && str(r.text)), "risks: каждый риск {title, text}");
   strList(d.verify_before_investment, "verify_before_investment");
+  if (Array.isArray(d.risks))
+    d.risks.forEach((r, i) => {
+      if (isObj(r) && r.level !== undefined) need(RISK_LEVELS.includes(r.level as RiskLevel), `risks[${i}].level: ${RISK_LEVELS.join(", ")}`);
+    });
+  if (d.fx !== undefined) {
+    const fx = d.fx;
+    need(isObj(fx) && finite(fx.usd_uzs) && fx.usd_uzs > 0 && typeof fx.date === "string", "fx: нужны usd_uzs (> 0) и date");
+    if (isObj(fx)) {
+      inputLabel(fx.label, "fx");
+      checkSource(fx.source, "fx");
+    }
+  }
+  if (d.alternatives !== undefined) {
+    if (!Array.isArray(d.alternatives)) errors.push("alternatives: нужен список");
+    else
+      d.alternatives.forEach((a, i) => {
+        const where = `alternatives[${i}]`;
+        if (!isObj(a)) return void errors.push(`${where}: нужен объект`);
+        for (const key of ["key", "title", "summary", "equipment_name"] as const) need(str(a[key]), `${where}.${key}: пусто`);
+        checkNumber(a.capacity_per_hour, `${where}.capacity_per_hour`, { required: true });
+        if (a.power_kw !== undefined) checkNumber(a.power_kw, `${where}.power_kw`, { positive: true });
+        checkMoneyList(a.capex, `${where}.capex`, "amount");
+        checkMoneyList(a.opex_monthly, `${where}.opex_monthly`, "amount");
+      });
+  }
+  if (isObj(d.market) && d.market.channels !== undefined) {
+    if (!Array.isArray(d.market.channels)) errors.push("market.channels: нужен список");
+    else
+      d.market.channels.forEach((c, i) => {
+        need(isObj(c) && str(c.name), `market.channels[${i}]: нужно name`);
+        if (isObj(c)) checkNumber(c.price, `market.channels[${i}].price`);
+      });
+  }
+  if (d.permits !== undefined) {
+    if (!Array.isArray(d.permits)) errors.push("permits: нужен список");
+    else
+      d.permits.forEach((x, i) => {
+        need(isObj(x) && str(x.title) && str(x.text), `permits[${i}]: нужны title и text`);
+        if (isObj(x)) {
+          inputLabel(x.label, `permits[${i}]`);
+          checkSource(x.source, `permits[${i}]`);
+        }
+      });
+  }
+  if (d.roadmap !== undefined)
+    need(Array.isArray(d.roadmap) && d.roadmap.every((x) => isObj(x) && str(x.period) && str(x.stage) && str(x.tasks)), "roadmap: каждый этап {period, stage, tasks}");
+  if (d.verdict !== undefined)
+    need(isObj(d.verdict) && Array.isArray(d.verdict.fits) && Array.isArray(d.verdict.not_fits), "verdict: нужны списки fits и not_fits");
 
   if (!Array.isArray(d.sources)) errors.push("sources: нужен список");
   else
